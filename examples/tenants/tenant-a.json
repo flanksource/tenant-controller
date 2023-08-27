@@ -1,0 +1,7 @@
+{
+  "name": "ACME Corp",
+  "cloud": "azure",
+  "db": {
+    "username": "efwde"
+  }
+}

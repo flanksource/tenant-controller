@@ -7,6 +7,7 @@ import (
 
 	"github.com/flanksource/tenant-controller/pkg"
 	"github.com/flanksource/tenant-controller/pkg/git"
+	"github.com/flanksource/tenant-controller/pkg/secrets"
 	"github.com/gosimple/slug"
 	"github.com/labstack/echo/v4"
 )
@@ -26,15 +27,13 @@ func CreateTenant(c echo.Context) error {
 		tenant.Slug = slug.Make(tenant.Name)
 	}
 
-	// TODO: Remove side-effects
-	// This sets certain parameters that are used
-	// by sc.GenrateSealedSecret
-	// Use `SealedSecretParams` struct to pass into that func
-	tenant.GenerateDBCredentials()
-
 	// TODO: Webhook does not tell which cloud provider
 	sc := GetSecretControllerFromCloud(tenant.Cloud)
-	sealedSecretRaw, err := sc.GenerateSealedSecret(tenant)
+	sealedSecretRaw, err := sc.GenerateSealedSecret(secrets.SealedSecretParams{
+		Slug:     tenant.Slug,
+		Username: tenant.GenerateDBUsername(),
+		Password: tenant.GenerateDBPassword(),
+	})
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

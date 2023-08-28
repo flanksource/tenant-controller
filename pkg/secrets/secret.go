@@ -3,13 +3,18 @@ package secrets
 import (
 	"os"
 
-	"github.com/flanksource/tenant-controller/pkg"
 	"gopkg.in/yaml.v2"
 )
 
+type SealedSecretParams struct {
+	Slug     string
+	Username string
+	Password string
+}
+
 type Secrets interface {
 	// GenerateSealedSecret generates a sealed secret from the tenant authenticating using the configured cloud provider
-	GenerateSealedSecret(tenant *pkg.Tenant) ([]byte, error)
+	GenerateSealedSecret(params SealedSecretParams) ([]byte, error)
 }
 
 // create a function that creates a kubernetes secret object structure and write it into a file

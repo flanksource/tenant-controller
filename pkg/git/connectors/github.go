@@ -56,19 +56,19 @@ func (g *Github) Push(ctx context.Context, branch string) error {
 	return nil
 }
 
-func (g *Github) OpenPullRequest(ctx context.Context, base string, head string, spec *v1.PullRequestTemplate) (int, error) {
+func (g *Github) OpenPullRequest(ctx context.Context, spec v1.PullRequestTemplate) (int, error) {
 	if spec.Title == "" {
-		spec.Title = head
+		spec.Title = spec.Branch
 	}
 	pr, _, err := g.scm.PullRequests.Create(ctx, g.repository, &scm.PullRequestInput{
 		Title: spec.Title,
 		Body:  spec.Body,
-		Head:  head,
-		Base:  base,
+		Head:  spec.Branch,
+		Base:  spec.Base,
 	})
 
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to create pr repo=%s title=%s, head=%s base=%s", g.repository, spec.Title, head, base)
+		return 0, errors.Wrapf(err, "failed to create pr repo=%s title=%s, head=%s base=%s", g.repository, spec.Title, spec.Branch, spec.Base)
 	}
 
 	if len(spec.Reviewers) > 0 {

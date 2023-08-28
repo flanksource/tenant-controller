@@ -9,8 +9,8 @@ import (
 
 type AzureSealedSecret struct{}
 
-func (s *AzureSealedSecret) GenerateSealedSecret(tenant *pkg.Tenant) ([]byte, error) {
-	fileName, err := createDBSecretFile(tenant.Slug, tenant.DB.Username, tenant.DB.Password)
+func (s *AzureSealedSecret) GenerateSealedSecret(params SealedSecretParams) ([]byte, error) {
+	fileName, err := createDBSecretFile(params.Slug, params.Username, params.Password)
 	if err != nil {
 		return nil, err
 	}

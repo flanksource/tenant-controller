@@ -11,7 +11,7 @@ RUN make build
 FROM debian:bookworm-slim
 WORKDIR /app
 
-COPY --from=builder /app/.bin/incident-commander /app
+COPY --from=builder /app/.bin/tenant-controller /app
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 ENTRYPOINT ["/app/tenant-controller"]

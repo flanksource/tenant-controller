@@ -23,7 +23,7 @@ type GitSSH struct {
 	auth transport.AuthMethod
 }
 
-func (g *GitSSH) OpenPullRequest(ctx context.Context, base string, head string, spec *v1.PullRequestTemplate) (int, error) {
+func (g *GitSSH) OpenPullRequest(ctx context.Context, spec v1.PullRequestTemplate) (int, error) {
 	return 0, fmt.Errorf("open pull request  not implemented for git ssh")
 }
 

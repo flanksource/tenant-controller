@@ -13,7 +13,7 @@ import (
 type Connector interface {
 	Clone(ctx context.Context, branch, local string) (billy.Filesystem, *git.Worktree, error)
 	Push(ctx context.Context, branch string) error
-	OpenPullRequest(ctx context.Context, base string, head string, spec *v1.PullRequestTemplate) (int, error)
+	OpenPullRequest(ctx context.Context, spec v1.PullRequestTemplate) (int, error)
 	ClosePullRequest(ctx context.Context, id int) error
 }
 

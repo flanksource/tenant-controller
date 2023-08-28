@@ -10,11 +10,14 @@ import (
 	"strings"
 	"time"
 
+	v1 "github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg"
 	"github.com/flanksource/tenant-controller/pkg/git/connectors"
 	"github.com/go-git/go-billy/v5"
 	gitv5 "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/gosimple/slug"
+	"github.com/labstack/gommon/random"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -22,14 +25,14 @@ import (
 )
 
 func OpenPRWithTenantResources(tenant *pkg.Tenant, tenantObjs []*unstructured.Unstructured) (pr int, hash string, err error) {
-	// TODO: Git config should be passed as arg, not taken from global
 	connector, err := connectors.NewConnector(pkg.Config.Git)
 	if err != nil {
 		return
 	}
 
 	title := fmt.Sprintf("feat: add %s tenant resources", tenant.Name)
-	work, title, err := CreateTenantResources(connector, tenant, tenantObjs)
+	prTemplate := getTenantPRTemplate(title)
+	work, title, err := CreateTenantResources(connector, tenant, tenantObjs, prTemplate)
 	if err != nil {
 		return
 	}
@@ -39,11 +42,11 @@ func OpenPRWithTenantResources(tenant *pkg.Tenant, tenantObjs []*unstructured.Un
 		return
 	}
 
-	if err = connector.Push(context.Background(), fmt.Sprintf("%s:%s", pkg.Config.Git.Branch, pkg.Config.Git.Base)); err != nil {
+	if err = connector.Push(context.Background(), prTemplate.Branch); err != nil {
 		return
 	}
 
-	pr, err = connector.OpenPullRequest(context.Background(), pkg.Config.Git.Base, pkg.Config.Git.Branch, pkg.Config.Git.PullRequest)
+	pr, err = connector.OpenPullRequest(context.Background(), prTemplate)
 	if err != nil {
 		return
 	}
@@ -51,11 +54,31 @@ func OpenPRWithTenantResources(tenant *pkg.Tenant, tenantObjs []*unstructured.Un
 	return
 }
 
-func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, tenantObjs []*unstructured.Unstructured) (work *gitv5.Worktree, title string, err error) {
-	// TODO: This is not thread safe
-	pkg.Config.Git.SetDefaults(title)
+func getTenantPRTemplate(title string) v1.PullRequestTemplate {
+	base := pkg.Config.Git.PullRequest.Base
+	if base == "" {
+		base = "main"
+	}
+	prtitle := pkg.Config.Git.PullRequest.Title
+	if prtitle == "" {
+		prtitle = title
+	}
 
-	fs, work, err := connector.Clone(context.Background(), pkg.Config.Git.Base, pkg.Config.Git.Branch)
+	branch := slug.Make(title) + "-" + random.String(4)
+
+	return v1.PullRequestTemplate{
+		Base:      base,
+		Branch:    branch,
+		Body:      pkg.Config.Git.PullRequest.Body,
+		Title:     pkg.Config.Git.PullRequest.Title,
+		Reviewers: pkg.Config.Git.PullRequest.Reviewers,
+		Assignees: pkg.Config.Git.PullRequest.Assignees,
+		Tags:      pkg.Config.Git.PullRequest.Tags,
+	}
+}
+
+func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, tenantObjs []*unstructured.Unstructured, prTemplate v1.PullRequestTemplate) (work *gitv5.Worktree, title string, err error) {
+	fs, work, err := connector.Clone(context.Background(), prTemplate.Base, prTemplate.Branch)
 	if err != nil {
 		return
 	}
@@ -124,6 +147,7 @@ func getContentsPath(tenant *pkg.Tenant) string {
 }
 
 func getClusterName(tenant *pkg.Tenant) string {
+	// TODO: Take this from config
 	switch tenant.Cloud {
 	case pkg.Azure:
 		return "azure-internal-prod"

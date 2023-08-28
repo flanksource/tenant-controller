@@ -34,7 +34,8 @@ spec:
           - --out-kube-config-server=https://{{.tenant}}.{{.tenant}}.svc
     missionControl:
       flanksource-ui:
-        oryKratosURL: https://{{.tenant}}.internal-prod.flanksource.com/api/.ory`
+        oryKratosURL: https://{{.tenant}}.internal-prod.flanksource.com/api/.ory
+`
 
 	NAMESPACE_TEMPLATE = `apiVersion: v1
 kind: Namespace

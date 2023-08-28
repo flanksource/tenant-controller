@@ -12,14 +12,14 @@ type CloudProvider string
 
 const (
 	AWS   CloudProvider = "aws"
-	AZURE CloudProvider = "azure"
+	Azure CloudProvider = "azure"
 )
 
 type Tenant struct {
 	Name  string         `json:"name"`
 	Cloud CloudProvider  `json:"cloud"`
 	Slug  string         `json:"slug,omitempty"`
-	AZURE v1.AZUREConfig `json:"-"`
+	Azure v1.AZUREConfig `json:"-"`
 	DB    DBCredentials  `json:"-"`
 }
 

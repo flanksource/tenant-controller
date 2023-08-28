@@ -1,34 +1,24 @@
 package api
 
 import (
-	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 
-	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/tenant-controller/pkg"
 	"github.com/flanksource/tenant-controller/pkg/git"
-	"github.com/flanksource/tenant-controller/pkg/git/connectors"
 	"github.com/gosimple/slug"
 	"github.com/labstack/echo/v4"
 )
 
 func CreateTenant(c echo.Context) error {
 	if c.Request().Body == nil {
-		logger.Debugf("missing request body")
 		return errorResonse(c, errors.New("missing request body"), http.StatusBadRequest)
 	}
 	defer c.Request().Body.Close()
 
-	tenant := &pkg.Tenant{}
-	reqBody, err := io.ReadAll(c.Request().Body)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
-	}
-	if err := json.Unmarshal(reqBody, tenant); err != nil {
+	var tenant *pkg.Tenant
+	if err := c.Bind(tenant); err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
@@ -36,15 +26,15 @@ func CreateTenant(c echo.Context) error {
 		tenant.Slug = slug.Make(tenant.Name)
 	}
 
+	// TODO: Remove side-effects
+	// This sets certain parameters that are used
+	// by sc.GenrateSealedSecret
+	// Use `SealedSecretParams` struct to pass into that func
 	tenant.GenerateDBCredentials()
 
+	// TODO: Webhook does not tell which cloud provider
 	sc := GetSecretControllerFromCloud(tenant.Cloud)
 	sealedSecretRaw, err := sc.GenerateSealedSecret(tenant)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
-	}
-
-	connector, err := connectors.NewConnector(pkg.Config.GIT)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
@@ -53,20 +43,8 @@ func CreateTenant(c echo.Context) error {
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
-	work, title, err := git.CreateTenantResources(connector, tenant, objs)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
-	}
 
-	hash, err := git.CreateCommit(work, title)
-	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
-	}
-	if err = connector.Push(context.TODO(), fmt.Sprintf("%s:%s", pkg.Config.GIT.Branch, pkg.Config.GIT.Base)); err != nil {
-		return c.String(http.StatusInternalServerError, err.Error())
-	}
-
-	pr, err := connector.OpenPullRequest(context.TODO(), pkg.Config.GIT.Base, pkg.Config.GIT.Branch, pkg.Config.GIT.PullRequest)
+	pr, hash, err := git.OpenPRWithTenantResources(tenant, objs)
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

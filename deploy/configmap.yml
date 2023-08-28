@@ -1,0 +1,23 @@
+apiVersion: v1 
+kind: ConfigMap 
+metadata:
+  name: tenant-controller
+data:
+  config.yaml: |
+    key: some-arn
+    azure:
+      tenant_id: <TENANT_ID>
+      client_secret: <CLIENT_SECRET>
+      client_id: <CLIENT_ID>
+      vault_uri: <VAULT_URI>
+    git:
+      repository: https://github.com/flanksource/aws-sandbox
+      user: flankbot
+      base: main
+      pull_request:
+        assignees:
+          - Kaitou786
+        reviewers:
+          - moshloop
+      github_token: <GH_TOKEN>
+      kustomizationPath: '{{ .cluster }}/spec/environments/production/tenants/kustomization.yml'

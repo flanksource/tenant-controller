@@ -28,7 +28,7 @@ type GitopsAPISpec struct {
 	SSH_PRIVATE_KEY_PASSORD string `json:"ssh_private_key_password,omitempty"`
 
 	// The path to a kustomization file to insert or remove the resource, can included templated values .e.g `specs/clusters/{{.cluster}}/kustomization.yaml`
-	Kustomization string `json:"kustomization,omitempty"`
+	KustomizationPath string `json:"kustomizationPath,omitempty"`
 }
 
 type PullRequestTemplate struct {

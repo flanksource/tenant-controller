@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tenant-controller
+  labels:
+    app.kubernetes.io/name: tenant-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tenant-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tenant-controller
+    spec:
+      containers:
+        - name: tenant-controller
+          image: docker.io/flanksource/tenant-controller:v0.0.0
+          command:
+            - /app/tenant-controller
+          args:
+            - -c config.yml
+          volumeMounts:
+          - name: config-volume
+            mountPath: /app/config.yml
+            subPath: config.yml
+      volumes:
+      - name: config-volume
+        configMap:
+         name: tenant-controller

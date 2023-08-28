@@ -13,7 +13,7 @@ func errorResonse(c echo.Context, err error, code int) error {
 
 func GetSecretControllerFromCloud(cloud pkg.CloudProvider) secrets.Secrets {
 	switch cloud {
-	case pkg.AZURE:
+	case pkg.Azure:
 		return &secrets.AzureSealedSecret{}
 	}
 	return nil

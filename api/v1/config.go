@@ -12,9 +12,9 @@ const (
 )
 
 type Config struct {
-	GIT   *GitopsAPISpec `json:"git,omitempty" yaml:"git,omitempty"`
+	Git   *GitopsAPISpec `json:"git,omitempty" yaml:"git,omitempty"`
 	AWS   *AWSConfig     `json:"aws,omitempty" yaml:"aws,omitempty"`
-	AZURE *AZUREConfig   `json:"azure,omitempty" yaml:"azure,omitempty"`
+	Azure *AZUREConfig   `json:"azure,omitempty" yaml:"azure,omitempty"`
 }
 
 type AWSConfig struct {
@@ -29,7 +29,7 @@ type AZUREConfig struct {
 	VaultURI     string `json:"vault_uri" yaml:"vault_url"`
 }
 
-func (a *AZUREConfig) SetENVS() {
+func (a *AZUREConfig) SetEnvs() {
 	os.Setenv("AZURE_CLIENT_SECRET", a.ClientSecret)
 	os.Setenv("AZURE_CLIENT_ID", a.ClientID)
 	os.Setenv("AZURE_TENANT_ID", a.TenantID)

@@ -14,11 +14,7 @@ func (s *AzureSealedSecret) GenerateSealedSecret(tenant *pkg.Tenant) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-	pkg.Config.AZURE.SetENVS()
+	pkg.Config.Azure.SetEnvs()
 	cmd := exec.Command("sops", "--encrypt", "--encrypted-regex", "stringData", "--azure-kv", os.Getenv("AZURE_VAULT_URL"), fileName)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
+	return cmd.CombinedOutput()
 }

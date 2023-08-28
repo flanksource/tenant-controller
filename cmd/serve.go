@@ -22,19 +22,15 @@ var debug bool
 var configFile string
 
 var Serve = &cobra.Command{
-
 	Use:   "serve",
 	Short: "Start a server and accept API requests",
-	Run: func(_ *cobra.Command, configFiles []string) {
-		if configFile == "" {
-			serve(configFiles[0])
-		}
+	Run: func(_ *cobra.Command, _ []string) {
 		serve(configFile)
 	},
 }
 
 func serve(configFile string) {
-	if len(configFile) == 0 {
+	if configFile == "" {
 		log.Fatalln("Must specify the config file")
 	}
 

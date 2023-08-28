@@ -21,10 +21,41 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
+func OpenPRWithTenantResources(tenant *pkg.Tenant, tenantObjs []*unstructured.Unstructured) (pr int, hash string, err error) {
+	// TODO: Git config should be passed as arg, not taken from global
+	connector, err := connectors.NewConnector(pkg.Config.Git)
+	if err != nil {
+		return
+	}
+
+	title := fmt.Sprintf("feat: add %s tenant resources", tenant.Name)
+	work, title, err := CreateTenantResources(connector, tenant, tenantObjs)
+	if err != nil {
+		return
+	}
+
+	hash, err = CreateCommit(work, title)
+	if err != nil {
+		return
+	}
+
+	if err = connector.Push(context.Background(), fmt.Sprintf("%s:%s", pkg.Config.Git.Branch, pkg.Config.Git.Base)); err != nil {
+		return
+	}
+
+	pr, err = connector.OpenPullRequest(context.Background(), pkg.Config.Git.Base, pkg.Config.Git.Branch, pkg.Config.Git.PullRequest)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, tenantObjs []*unstructured.Unstructured) (work *gitv5.Worktree, title string, err error) {
-	title = fmt.Sprintf("feat: add %s tenant resources", tenant.Name)
-	pkg.Config.GIT.SetDefaults(title)
-	fs, work, err := connector.Clone(context.TODO(), pkg.Config.GIT.Base, pkg.Config.GIT.Branch)
+	// TODO: This is not thread safe
+	pkg.Config.Git.SetDefaults(title)
+
+	fs, work, err := connector.Clone(context.Background(), pkg.Config.Git.Base, pkg.Config.Git.Branch)
 	if err != nil {
 		return
 	}
@@ -38,21 +69,24 @@ func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, t
 		if err != nil {
 			return nil, "", err
 		}
-		if err = copy(body, contentPath, fs, work); err != nil {
+		if err = writeGitWorkTree(body, contentPath, fs, work); err != nil {
 			return nil, "", err
 		}
 	}
 	// update root kustomization and add tenant kustomization to it
-	kustomization, err := getKustomizaton(fs, pkg.Config.GIT.Kustomization)
+	kustomization, err := getKustomizaton(fs, pkg.Config.Git.KustomizationPath)
 	if err != nil {
 		return nil, "", err
 	}
+
+	// TODO: This should not append the resources, tenant yaml files should be in
+	// their own directories
 	kustomization.Resources = append(kustomization.Resources, tenant.Slug)
 	existingKustomization, err := yaml.Marshal(kustomization)
 	if err != nil {
 		return nil, "", err
 	}
-	if err = copy(existingKustomization, pkg.Config.GIT.Kustomization, fs, work); err != nil {
+	if err = writeGitWorkTree(existingKustomization, pkg.Config.Git.KustomizationPath, fs, work); err != nil {
 		return nil, "", err
 	}
 	return
@@ -60,8 +94,8 @@ func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, t
 
 func CreateCommit(work *gitv5.Worktree, title string) (hash string, err error) {
 	author := &object.Signature{
-		Name:  pkg.Config.GIT.User,
-		Email: pkg.Config.GIT.Email,
+		Name:  pkg.Config.Git.User,
+		Email: pkg.Config.Git.Email,
 		When:  time.Now(),
 	}
 	if author.Name == "" {
@@ -83,15 +117,15 @@ func CreateCommit(work *gitv5.Worktree, title string) (hash string, err error) {
 }
 
 func getContentsPath(tenant *pkg.Tenant) string {
-	pkg.Config.GIT.Kustomization, _ = pkg.Template(pkg.Config.GIT.Kustomization, map[string]interface{}{
+	pkg.Config.Git.KustomizationPath, _ = pkg.Template(pkg.Config.Git.KustomizationPath, map[string]interface{}{
 		"cluster": getClusterName(tenant),
 	})
-	return path.Dir(pkg.Config.GIT.Kustomization) + "/" + tenant.Slug
+	return path.Dir(pkg.Config.Git.KustomizationPath) + "/" + tenant.Slug
 }
 
 func getClusterName(tenant *pkg.Tenant) string {
 	switch tenant.Cloud {
-	case pkg.AZURE:
+	case pkg.Azure:
 		return "azure-internal-prod"
 	case pkg.AWS:
 		return "aws-demo"
@@ -99,7 +133,7 @@ func getClusterName(tenant *pkg.Tenant) string {
 	return ""
 }
 
-func copy(data []byte, path string, fs billy.Filesystem, work *gitv5.Worktree) error {
+func writeGitWorkTree(data []byte, path string, fs billy.Filesystem, work *gitv5.Worktree) error {
 	dst, err := openOrCreate(path, fs)
 	if err != nil {
 		return errors.Wrap(err, "failed to open")

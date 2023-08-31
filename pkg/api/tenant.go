@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/flanksource/commons/logger"
 	"github.com/flanksource/tenant-controller/pkg"
 	"github.com/flanksource/tenant-controller/pkg/git"
 	"github.com/flanksource/tenant-controller/pkg/secrets"
@@ -18,10 +19,20 @@ func CreateTenant(c echo.Context) error {
 	}
 	defer c.Request().Body.Close()
 
-	var tenant *pkg.Tenant
-	if err := c.Bind(tenant); err != nil {
+	var reqBody pkg.TenantRequestBody
+	if err := c.Bind(&reqBody); err != nil {
+		logger.Infof("Broken %v", err)
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
+
+	t, err := pkg.NewTenant(reqBody)
+	if err != nil {
+		return errorResonse(c, err, http.StatusBadRequest)
+	}
+
+	// TODO: Pointer ref should not be required
+	// remove places with side-effects
+	tenant := &t
 
 	if tenant.Slug == "" {
 		tenant.Slug = slug.Make(tenant.Name)
@@ -35,10 +46,10 @@ func CreateTenant(c echo.Context) error {
 		Password: tenant.GenerateDBPassword(),
 	})
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResonse(c, fmt.Errorf("Error generating sealed secret: %s %v", string(sealedSecretRaw), err), http.StatusInternalServerError)
 	}
 
-	objs, err := pkg.GetTenantResources(tenant.Slug, sealedSecretRaw)
+	objs, err := pkg.GetTenantResources(tenant.Slug, string(sealedSecretRaw))
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

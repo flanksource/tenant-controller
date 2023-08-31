@@ -3,8 +3,9 @@ kind: ConfigMap
 metadata:
   name: tenant-controller
 data:
-  config.yaml: |
-    key: some-arn
+  config.yml: |
+    aws:
+      key: some-arn
     azure:
       tenant_id: <TENANT_ID>
       client_secret: <CLIENT_SECRET>
@@ -13,8 +14,8 @@ data:
     git:
       repository: https://github.com/flanksource/aws-sandbox
       user: flankbot
-      base: main
       pull_request:
+        base: main
         assignees:
           - Kaitou786
         reviewers:

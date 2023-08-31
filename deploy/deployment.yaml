@@ -16,11 +16,13 @@ spec:
     spec:
       containers:
         - name: tenant-controller
-          image: docker.io/flanksource/tenant-controller:v0.0.0
+          image: docker.io/flanksource/tenant-controller:v1.0.2
           command:
             - /app/tenant-controller
           args:
-            - -c config.yml
+            - serve
+            - -c
+            - /app/config.yml
           volumeMounts:
           - name: config-volume
             mountPath: /app/config.yml

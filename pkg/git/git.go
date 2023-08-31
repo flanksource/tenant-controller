@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -82,12 +81,10 @@ func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, t
 	if err != nil {
 		return
 	}
-	// path at which tenant resources will be stored
-	contentsPath := getContentsPath(tenant)
 
 	// add tenant resources to git
 	for _, obj := range tenantObjs {
-		contentPath := filepath.Join(contentsPath, strings.ToLower(obj.GetKind())+".yaml")
+		contentPath := filepath.Join(tenant.ContentPath, strings.ToLower(obj.GetKind())+".yaml")
 		body, err := yaml.Marshal(obj.Object)
 		if err != nil {
 			return nil, "", err
@@ -97,7 +94,7 @@ func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, t
 		}
 	}
 	// update root kustomization and add tenant kustomization to it
-	kustomization, err := getKustomizaton(fs, pkg.Config.Git.KustomizationPath)
+	kustomization, err := getKustomizaton(fs, tenant.KustomizationPath)
 	if err != nil {
 		return nil, "", err
 	}
@@ -109,7 +106,7 @@ func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, t
 	if err != nil {
 		return nil, "", err
 	}
-	if err = writeGitWorkTree(existingKustomization, pkg.Config.Git.KustomizationPath, fs, work); err != nil {
+	if err = writeGitWorkTree(existingKustomization, tenant.KustomizationPath, fs, work); err != nil {
 		return nil, "", err
 	}
 	return
@@ -137,24 +134,6 @@ func CreateCommit(work *gitv5.Worktree, title string) (hash string, err error) {
 	}
 	hash = _hash.String()
 	return
-}
-
-func getContentsPath(tenant *pkg.Tenant) string {
-	pkg.Config.Git.KustomizationPath, _ = pkg.Template(pkg.Config.Git.KustomizationPath, map[string]interface{}{
-		"cluster": getClusterName(tenant),
-	})
-	return path.Dir(pkg.Config.Git.KustomizationPath) + "/" + tenant.Slug
-}
-
-func getClusterName(tenant *pkg.Tenant) string {
-	// TODO: Take this from config
-	switch tenant.Cloud {
-	case pkg.Azure:
-		return "azure-internal-prod"
-	case pkg.AWS:
-		return "aws-demo"
-	}
-	return ""
 }
 
 func writeGitWorkTree(data []byte, path string, fs billy.Filesystem, work *gitv5.Worktree) error {

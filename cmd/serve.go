@@ -42,6 +42,7 @@ func serve(configFile string) {
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowedCors,
 	}))
+	e.Use(middleware.Logger())
 
 	if debug {
 		logger.Infof("Starting pprof at /debug")

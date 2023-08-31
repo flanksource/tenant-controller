@@ -3,6 +3,7 @@ package pkg
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
 
 	gotemplate "text/template"
 
@@ -21,6 +22,16 @@ func Template(template string, vars map[string]interface{}) (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+func RandomString(length uint) string {
+	// Generate a random password of length 16
+	const passwordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>/?"
+	password := make([]byte, length)
+	for i := range password {
+		password[i] = passwordChars[rand.Intn(len(passwordChars))]
+	}
+	return string(password)
 }
 
 func GetUnstructuredObjects(data ...string) ([]*unstructured.Unstructured, error) {

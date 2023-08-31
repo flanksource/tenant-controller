@@ -64,18 +64,7 @@ func (tenant Tenant) GenerateDBUsername() string {
 }
 
 func (tenant Tenant) GenerateDBPassword() string {
-	return generateRandomPassword()
-}
-
-func generateRandomPassword() string {
-	// Generate a random password of length 16
-	const passwordLength = 16
-	const passwordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>/?"
-	password := make([]byte, passwordLength)
-	for i := range password {
-		password[i] = passwordChars[rand.Intn(len(passwordChars))]
-	}
-	return string(password)
+	return RandomString(16)
 }
 
 func getClusterName(cloud CloudProvider) string {

@@ -33,37 +33,43 @@ spec:
           - --tls-san={{.tenant}}.{{.tenant}}.svc
           - --out-kube-config-server=https://{{.tenant}}.{{.tenant}}.svc
     missionControl:
+      authProvider: clerk
       flanksource-ui:
-        oryKratosURL: https://{{.tenant}}.internal-prod.flanksource.com/api/.ory
+        enabled: false
+      db:
+        # We are creating our own secrets
+        create: false
 `
 
-	NAMESPACE_TEMPLATE = `apiVersion: v1
+	NAMESPACE_TEMPLATE = `
+apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{.tenant}}`
+  name: {{.tenant}}
+`
 
-	KUSTOMIZATION_RAW = `apiVersion: kustomize.config.k8s.io/v1beta1
+	KUSTOMIZATION_RAW = `
+apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - namespace.yaml
   - helmrelease.yaml
-  - secret.yaml`
+  - secret.yaml
+`
 )
 
-func GetTenantResources(tenantSlug string, sealedSecretResource []byte) (obj []*unstructured.Unstructured, err error) {
-	helmReleaseRaw, err := Template(HELM_RELEASE_TEMPLATE, map[string]interface{}{
+func GetTenantResources(tenantSlug, sealedSecret string) (obj []*unstructured.Unstructured, err error) {
+	vars := map[string]any{
 		"tenant": tenantSlug,
-	})
+	}
+	helmReleaseRaw, err := Template(HELM_RELEASE_TEMPLATE, vars)
 	if err != nil {
 		return nil, err
 	}
-	namespaceRaw, err := Template(NAMESPACE_TEMPLATE, map[string]interface{}{
-		"tenant": tenantSlug,
-	})
+	namespaceRaw, err := Template(NAMESPACE_TEMPLATE, vars)
 	if err != nil {
 		return nil, err
 	}
-	sealedSecretRaw := string(sealedSecretResource)
 
-	return GetUnstructuredObjects(namespaceRaw, sealedSecretRaw, KUSTOMIZATION_RAW, helmReleaseRaw)
+	return GetUnstructuredObjects(namespaceRaw, sealedSecret, KUSTOMIZATION_RAW, helmReleaseRaw)
 }

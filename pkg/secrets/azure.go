@@ -15,6 +15,11 @@ func (s *AzureSealedSecret) GenerateSealedSecret(params SealedSecretParams) ([]b
 		return nil, err
 	}
 	pkg.Config.Azure.SetEnvs()
-	cmd := exec.Command("sops", "--encrypt", "--encrypted-regex", "stringData", "--azure-kv", os.Getenv("AZURE_VAULT_URL"), fileName)
-	return cmd.CombinedOutput()
+
+	return exec.Command(
+		"sops", "--encrypt",
+		"--encrypted-regex", "stringData",
+		"--azure-kv", os.Getenv("AZURE_VAULT_URL"),
+		fileName,
+	).CombinedOutput()
 }

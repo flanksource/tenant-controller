@@ -16,7 +16,6 @@ import (
 	gitv5 "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gosimple/slug"
-	"github.com/labstack/gommon/random"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -63,7 +62,7 @@ func getTenantPRTemplate(title string) v1.PullRequestTemplate {
 		prtitle = title
 	}
 
-	branch := slug.Make(title) + "-" + random.String(4)
+	branch := slug.Make(title) + "-" + pkg.RandomString(4)
 
 	return v1.PullRequestTemplate{
 		Base:      base,

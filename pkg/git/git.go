@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/flanksource/commons/logger"
 	v1 "github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg"
 	"github.com/flanksource/tenant-controller/pkg/git/connectors"
@@ -22,7 +23,7 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-func OpenPRWithTenantResources(tenant *pkg.Tenant, tenantObjs []*unstructured.Unstructured) (pr int, hash string, err error) {
+func OpenPRWithTenantResources(tenant pkg.Tenant, tenantObjs []*unstructured.Unstructured) (pr int, hash string, err error) {
 	connector, err := connectors.NewConnector(pkg.Config.Git)
 	if err != nil {
 		return
@@ -30,7 +31,7 @@ func OpenPRWithTenantResources(tenant *pkg.Tenant, tenantObjs []*unstructured.Un
 
 	title := fmt.Sprintf("feat: add %s tenant resources", tenant.Name)
 	prTemplate := getTenantPRTemplate(title)
-	work, title, err := CreateTenantResources(connector, tenant, tenantObjs, prTemplate)
+	work, err := CreateTenantResources(connector, tenant, tenantObjs, prTemplate)
 	if err != nil {
 		return
 	}
@@ -75,7 +76,7 @@ func getTenantPRTemplate(title string) v1.PullRequestTemplate {
 	}
 }
 
-func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, tenantObjs []*unstructured.Unstructured, prTemplate v1.PullRequestTemplate) (work *gitv5.Worktree, title string, err error) {
+func CreateTenantResources(connector connectors.Connector, tenant pkg.Tenant, tenantObjs []*unstructured.Unstructured, prTemplate v1.PullRequestTemplate) (work *gitv5.Worktree, err error) {
 	fs, work, err := connector.Clone(context.Background(), prTemplate.Base, prTemplate.Branch)
 	if err != nil {
 		return
@@ -86,16 +87,16 @@ func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, t
 		contentPath := filepath.Join(tenant.ContentPath, strings.ToLower(obj.GetKind())+".yaml")
 		body, err := yaml.Marshal(obj.Object)
 		if err != nil {
-			return nil, "", err
+			return nil, err
 		}
 		if err = writeGitWorkTree(body, contentPath, fs, work); err != nil {
-			return nil, "", err
+			return nil, err
 		}
 	}
 	// update root kustomization and add tenant kustomization to it
 	kustomization, err := getKustomizaton(fs, tenant.KustomizationPath)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	// TODO: This should not append the resources, tenant yaml files should be in
@@ -103,10 +104,10 @@ func CreateTenantResources(connector connectors.Connector, tenant *pkg.Tenant, t
 	kustomization.Resources = append(kustomization.Resources, tenant.Slug)
 	existingKustomization, err := yaml.Marshal(kustomization)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	if err = writeGitWorkTree(existingKustomization, tenant.KustomizationPath, fs, work); err != nil {
-		return nil, "", err
+		return nil, err
 	}
 	return
 }
@@ -123,6 +124,8 @@ func CreateCommit(work *gitv5.Worktree, title string) (hash string, err error) {
 	if author.Email == "" {
 		author.Email = "noreply@tenant-operator"
 	}
+
+	logger.Infof("Creating work commit with title: %s", title)
 	_hash, err := work.Commit(title, &gitv5.CommitOptions{
 		Author: author,
 		All:    true,

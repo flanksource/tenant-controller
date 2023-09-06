@@ -15,6 +15,7 @@ type Config struct {
 	Git   *GitopsAPISpec `json:"git,omitempty" yaml:"git,omitempty"`
 	AWS   *AWSConfig     `json:"aws,omitempty" yaml:"aws,omitempty"`
 	Azure *AzureConfig   `json:"azure,omitempty" yaml:"azure,omitempty"`
+	Clerk ClerkConfig    `json:"clerk,omitempty" yaml:"clerk,omitempty"`
 }
 
 type AWSConfig struct {
@@ -27,6 +28,10 @@ type AzureConfig struct {
 	ClientID     string `json:"client_id" yaml:"client_id"`
 	ClientSecret string `json:"client_secret" yaml:"client_secret"`
 	VaultURI     string `json:"vault_uri" yaml:"vault_url"`
+}
+
+type ClerkConfig struct {
+	JWKSURL string `json:"jwks_url" yaml:"jwks_url"`
 }
 
 func (a *AzureConfig) SetEnvs() {

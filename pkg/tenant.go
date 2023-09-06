@@ -34,11 +34,35 @@ spec:
           - --out-kube-config-server=https://{{.tenant}}.{{.tenant}}.svc
     missionControl:
       authProvider: clerk
-      flanksource-ui:
-        enabled: false
-      db:
-        # We are creating our own secrets
-        create: false
+      clerkJWKSURL: {{.jwksURL}}
+      clerkOrgID: {{.orgID}}
+`
+
+	INGRESS_TEMPLATE = `
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/tls-acme: "true"
+  name: mission-control-{{.tenant}}
+  namespace: {{.tenant}}
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: mission-control.{{.tenant}}.internal-prod.flanksource.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: mission-control-x-default-x-{{.tenant}}
+            port:
+              number: 8080
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - mission-control.{{.tenant}}.internal-prod.flanksource.com
+    secretName: mission-control-tls-{{.tenant}}
 `
 
 	NAMESPACE_TEMPLATE = `
@@ -55,12 +79,15 @@ resources:
   - namespace.yaml
   - helmrelease.yaml
   - secret.yaml
+  - ingress.yaml
 `
 )
 
-func GetTenantResources(tenantSlug, sealedSecret string) (obj []*unstructured.Unstructured, err error) {
+func GetTenantResources(tenant Tenant, sealedSecret string) (obj []*unstructured.Unstructured, err error) {
 	vars := map[string]any{
-		"tenant": tenantSlug,
+		"tenant":  tenant.Slug,
+		"jwksURL": Config.Clerk.JWKSURL,
+		"orgID":   tenant.OrgID,
 	}
 	helmReleaseRaw, err := Template(HELM_RELEASE_TEMPLATE, vars)
 	if err != nil {
@@ -70,6 +97,10 @@ func GetTenantResources(tenantSlug, sealedSecret string) (obj []*unstructured.Un
 	if err != nil {
 		return nil, err
 	}
+	ingressRaw, err := Template(INGRESS_TEMPLATE, vars)
+	if err != nil {
+		return nil, err
+	}
 
-	return GetUnstructuredObjects(namespaceRaw, sealedSecret, KUSTOMIZATION_RAW, helmReleaseRaw)
+	return GetUnstructuredObjects(namespaceRaw, sealedSecret, KUSTOMIZATION_RAW, helmReleaseRaw, ingressRaw)
 }

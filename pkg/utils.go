@@ -26,7 +26,7 @@ func Template(template string, vars map[string]interface{}) (string, error) {
 
 func RandomString(length uint) string {
 	// Generate a random password of length 16
-	const passwordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}|;:,.<>/?"
+	const passwordChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	password := make([]byte, length)
 	for i := range password {
 		password[i] = passwordChars[rand.Intn(len(passwordChars))]

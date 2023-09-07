@@ -5,6 +5,8 @@ azure:
   client_secret: <CLIENT_SECRET>
   client_id: <CLIENT_ID>
   vault_uri: <VAULT_URI>
+clerk:
+  jwks_url: <JWKS URL>
 git:
   repository: https://github.com/flanksource/aws-sandbox
   user: flankbot

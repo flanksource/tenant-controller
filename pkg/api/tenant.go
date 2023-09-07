@@ -9,7 +9,6 @@ import (
 	"github.com/flanksource/tenant-controller/pkg"
 	"github.com/flanksource/tenant-controller/pkg/git"
 	"github.com/flanksource/tenant-controller/pkg/secrets"
-	"github.com/gosimple/slug"
 	"github.com/labstack/echo/v4"
 )
 
@@ -25,17 +24,9 @@ func CreateTenant(c echo.Context) error {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
-	t, err := pkg.NewTenant(reqBody)
+	tenant, err := pkg.NewTenant(reqBody)
 	if err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
-	}
-
-	// TODO: Pointer ref should not be required
-	// remove places with side-effects
-	tenant := &t
-
-	if tenant.Slug == "" {
-		tenant.Slug = slug.Make(tenant.Name)
 	}
 
 	// TODO: Webhook does not tell which cloud provider
@@ -49,7 +40,7 @@ func CreateTenant(c echo.Context) error {
 		return errorResonse(c, fmt.Errorf("Error generating sealed secret: %s %v", string(sealedSecretRaw), err), http.StatusInternalServerError)
 	}
 
-	objs, err := pkg.GetTenantResources(tenant.Slug, string(sealedSecretRaw))
+	objs, err := pkg.GetTenantResources(tenant, string(sealedSecretRaw))
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

@@ -19,12 +19,13 @@ type Secrets interface {
 
 // create a function that creates a kubernetes secret object structure and write it into a file
 
-func createDBSecretFile(namePrefix, username, password string) (string, error) {
+func createDBSecretFile(slug, username, password string) (string, error) {
 	manifest := map[string]any{
 		"apiVersion": "v1",
 		"kind":       "Secret",
 		"metadata": map[string]string{
-			"name": namePrefix + "-db-credentials",
+			"name":      "db-credentials",
+			"namespace": slug,
 		},
 		"type": "Opaque",
 		"stringData": map[string]string{

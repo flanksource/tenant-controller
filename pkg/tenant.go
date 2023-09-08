@@ -26,7 +26,7 @@ spec:
   upgrade:
     crds: CreateReplace
   values:
-    domain: {{.tenant}}.internal-prod.flanksource.com
+    domain: {{.host}}
     vcluster:
       syncer:
         extraArgs:
@@ -36,33 +36,6 @@ spec:
       authProvider: clerk
       clerkJWKSURL: {{.jwksURL}}
       clerkOrgID: {{.orgID}}
-`
-
-	INGRESS_TEMPLATE = `
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    kubernetes.io/tls-acme: "true"
-  name: mission-control-{{.tenant}}
-  namespace: {{.tenant}}
-spec:
-  ingressClassName: nginx
-  rules:
-  - host: mission-control.{{.tenant}}.internal-prod.flanksource.com
-    http:
-      paths:
-      - backend:
-          service:
-            name: mission-control-x-default-x-{{.tenant}}
-            port:
-              number: 8080
-        path: /
-        pathType: ImplementationSpecific
-  tls:
-  - hosts:
-    - mission-control.{{.tenant}}.internal-prod.flanksource.com
-    secretName: mission-control-tls-{{.tenant}}
 `
 
 	NAMESPACE_TEMPLATE = `
@@ -79,13 +52,13 @@ resources:
   - namespace.yaml
   - helmrelease.yaml
   - secret.yaml
-  - ingress.yaml
 `
 )
 
 func GetTenantResources(tenant Tenant, sealedSecret string) (obj []*unstructured.Unstructured, err error) {
 	vars := map[string]any{
 		"tenant":  tenant.Slug,
+		"host":    tenant.Host,
 		"jwksURL": Config.Clerk.JWKSURL,
 		"orgID":   tenant.OrgID,
 	}
@@ -97,10 +70,6 @@ func GetTenantResources(tenant Tenant, sealedSecret string) (obj []*unstructured
 	if err != nil {
 		return nil, err
 	}
-	ingressRaw, err := Template(INGRESS_TEMPLATE, vars)
-	if err != nil {
-		return nil, err
-	}
 
-	return GetUnstructuredObjects(namespaceRaw, sealedSecret, KUSTOMIZATION_RAW, helmReleaseRaw, ingressRaw)
+	return GetUnstructuredObjects(namespaceRaw, sealedSecret, KUSTOMIZATION_RAW, helmReleaseRaw)
 }

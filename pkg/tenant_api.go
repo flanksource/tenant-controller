@@ -49,10 +49,7 @@ type Tenant struct {
 	Cloud CloudProvider `json:"cloud"`
 	Slug  string        `json:"slug"`
 	OrgID string        `json:"org_id"`
-
-	// Not sure why this was added
-	// But commenting out since it is not in use
-	//Azure             v1.AzureConfig `json:"-"`
+	Host  string        `json:"host"`
 
 	KustomizationPath string `json:"kustomizationPath"`
 
@@ -89,6 +86,7 @@ func NewTenant(req TenantRequestBody) (Tenant, error) {
 		Slug:              slug,
 		KustomizationPath: kPath,
 		ContentPath:       path.Join(path.Dir(kPath), slug),
+		Host:              getHost(cloud, slug),
 	}, nil
 }
 
@@ -109,4 +107,15 @@ func getClusterName(cloud CloudProvider) string {
 		return "aws-demo"
 	}
 	return ""
+}
+
+func getHost(cloud CloudProvider, tenantName string) string {
+	switch cloud {
+	case Azure:
+		return fmt.Sprintf("mission-control.%s.internal-prod.flanksource.com", tenantName)
+	case AWS:
+		return ""
+	default:
+		return ""
+	}
 }

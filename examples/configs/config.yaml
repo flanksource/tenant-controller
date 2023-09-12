@@ -8,13 +8,13 @@ azure:
 clerk:
   jwks_url: <JWKS URL>
 git:
-  repository: https://github.com/flanksource/aws-sandbox
+  repository: https://github.com/flanksource/sass-dev
   user: flankbot
   base: main
+  branch: main
   pull_request:
-    assignees:
-      - Kaitou786
+    assignees: []
     reviewers:
       - moshloop
   github_token: <GH_TOKEN>
-  kustomization: '{{ .cluster }}/spec/environments/production/tenants/kustomization.yml'
+  kustomization: '{{ .cluster }}/kustomization.yml'

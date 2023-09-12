@@ -46,12 +46,13 @@ func OpenPRWithTenantResources(tenant v1.Tenant, tenantObjs []*unstructured.Unst
 		return
 	}
 
-	pr, err = connector.OpenPullRequest(context.Background(), prTemplate)
-	if err != nil {
-		return
-	}
+	// Commenting out the PR Flow since we will be directly commiting to main branch
+	// pr, err = connector.OpenPullRequest(context.Background(), prTemplate)
+	// if err != nil {
+	//    return
+	// }
 
-	return
+	return 0, hash, nil
 }
 
 func getTenantPRTemplate(title string) v1.PullRequestTemplate {
@@ -64,7 +65,10 @@ func getTenantPRTemplate(title string) v1.PullRequestTemplate {
 		prtitle = title
 	}
 
-	branch := slug.Make(title) + "-" + utils.RandomString(4)
+	branch := config.Config.Git.PullRequest.Branch
+	if branch == "" {
+		branch = slug.Make(title) + "-" + utils.RandomString(4)
+	}
 
 	return v1.PullRequestTemplate{
 		Base:      base,

@@ -29,7 +29,7 @@ func CreateTenant(c echo.Context) error {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
-	if err := updateHostOnClerk(tenant.OrgID, tenant.Host); err != nil {
+	if err := updateParamsOnClerk(tenant); err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}
 

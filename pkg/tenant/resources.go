@@ -1,6 +1,9 @@
-package pkg
+package tenant
 
 import (
+	v1 "github.com/flanksource/tenant-controller/api/v1"
+	"github.com/flanksource/tenant-controller/pkg/config"
+	"github.com/flanksource/tenant-controller/pkg/utils"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -55,21 +58,21 @@ resources:
 `
 )
 
-func GetTenantResources(tenant Tenant, sealedSecret string) (obj []*unstructured.Unstructured, err error) {
+func GetTenantResources(tenant v1.Tenant, sealedSecret string) (obj []*unstructured.Unstructured, err error) {
 	vars := map[string]any{
 		"tenant":  tenant.Slug,
 		"host":    tenant.Host,
-		"jwksURL": Config.Clerk.JWKSURL,
+		"jwksURL": config.Config.Clerk.JWKSURL,
 		"orgID":   tenant.OrgID,
 	}
-	helmReleaseRaw, err := Template(HELM_RELEASE_TEMPLATE, vars)
+	helmReleaseRaw, err := utils.Template(HELM_RELEASE_TEMPLATE, vars)
 	if err != nil {
 		return nil, err
 	}
-	namespaceRaw, err := Template(NAMESPACE_TEMPLATE, vars)
+	namespaceRaw, err := utils.Template(NAMESPACE_TEMPLATE, vars)
 	if err != nil {
 		return nil, err
 	}
 
-	return GetUnstructuredObjects(namespaceRaw, sealedSecret, KUSTOMIZATION_RAW, helmReleaseRaw)
+	return utils.GetUnstructuredObjects(namespaceRaw, sealedSecret, KUSTOMIZATION_RAW, helmReleaseRaw)
 }

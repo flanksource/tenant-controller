@@ -29,6 +29,10 @@ func CreateTenant(c echo.Context) error {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
+	if err := updateHostOnClerk(tenant.OrgID, tenant.Host); err != nil {
+		return errorResonse(c, err, http.StatusInternalServerError)
+	}
+
 	// TODO: Webhook does not tell which cloud provider
 	sc := GetSecretControllerFromCloud(tenant.Cloud)
 	sealedSecretRaw, err := sc.GenerateSealedSecret(secrets.SealedSecretParams{

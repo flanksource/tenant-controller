@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/clerkinc/clerk-sdk-go/clerk"
 	"github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/utils"
@@ -28,6 +29,9 @@ func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
 		// TODO: If slug is empty, we might have to update the new slug in clerk
 		slug = goslug.Make(req.Data.Name)
 	}
+
+	// For keeping postgres user and database name simple
+	slug = strings.ReplaceAll(slug, "-", "_")
 
 	return v1.Tenant{
 		Name:              req.Data.Name,
@@ -62,4 +66,20 @@ func getHost(cloud v1.CloudProvider, tenantName string) string {
 	default:
 		return ""
 	}
+}
+
+func updateHostOnClerk(orgID, host string) error {
+	client, err := clerk.NewClient(config.Config.Clerk.SecretKey)
+	if err != nil {
+		return err
+	}
+
+	params := clerk.UpdateOrganizationMetadataParams{
+		PublicMetadata: []byte(fmt.Sprintf(`{"backend_url": "https://%s"}`, host)),
+	}
+	if _, err := client.Organizations().UpdateMetadata(orgID, params); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -23,9 +23,12 @@ func createDBSecretFile(slug, username, password string) (string, error) {
 	manifest := map[string]any{
 		"apiVersion": "v1",
 		"kind":       "Secret",
-		"metadata": map[string]string{
+		"metadata": map[string]any{
 			"name":      "db-credentials",
 			"namespace": slug,
+			"labels": map[string]string{
+				"flanksource.com/watch-pgsyncer": "true",
+			},
 		},
 		"type": "Opaque",
 		"stringData": map[string]string{

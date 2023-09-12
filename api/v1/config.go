@@ -12,10 +12,10 @@ const (
 )
 
 type Config struct {
-	Git   *GitopsAPISpec `json:"git,omitempty" yaml:"git,omitempty"`
-	AWS   *AWSConfig     `json:"aws,omitempty" yaml:"aws,omitempty"`
-	Azure *AzureConfig   `json:"azure,omitempty" yaml:"azure,omitempty"`
-	Clerk ClerkConfig    `json:"clerk,omitempty" yaml:"clerk,omitempty"`
+	Git   *GitopsAPISpec `json:"git" yaml:"git"`
+	AWS   *AWSConfig     `json:"aws" yaml:"aws"`
+	Azure *AzureConfig   `json:"azure" yaml:"azure"`
+	Clerk ClerkConfig    `json:"clerk" yaml:"clerk"`
 }
 
 type AWSConfig struct {
@@ -31,7 +31,8 @@ type AzureConfig struct {
 }
 
 type ClerkConfig struct {
-	JWKSURL string `json:"jwks_url" yaml:"jwks_url"`
+	SecretKey string `json:"secretKey" yaml:"secretKey"`
+	JWKSURL   string `json:"jwks_url" yaml:"jwks_url"`
 }
 
 func (a *AzureConfig) SetEnvs() {

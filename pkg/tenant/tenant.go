@@ -75,7 +75,7 @@ func updateHostOnClerk(orgID, host string) error {
 	}
 
 	params := clerk.UpdateOrganizationMetadataParams{
-		PublicMetadata: []byte(fmt.Sprintf(`{"host": "%s"}`, host)),
+		PublicMetadata: []byte(fmt.Sprintf(`{"backend_url": "https://%s"}`, host)),
 	}
 	if _, err := client.Organizations().UpdateMetadata(orgID, params); err != nil {
 		return err

@@ -1,7 +1,7 @@
-package api
+package tenant
 
 import (
-	"github.com/flanksource/tenant-controller/pkg"
+	v1 "github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg/secrets"
 	"github.com/labstack/echo/v4"
 )
@@ -11,9 +11,9 @@ func errorResonse(c echo.Context, err error, code int) error {
 	return c.JSON(code, e)
 }
 
-func GetSecretControllerFromCloud(cloud pkg.CloudProvider) secrets.Secrets {
+func GetSecretControllerFromCloud(cloud v1.CloudProvider) secrets.Secrets {
 	switch cloud {
-	case pkg.Azure:
+	case v1.AZURE:
 		return &secrets.AzureSealedSecret{}
 	}
 	return nil

@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/tenant-controller/pkg"
-	"github.com/flanksource/tenant-controller/pkg/api"
+	"github.com/flanksource/tenant-controller/pkg/config"
+	"github.com/flanksource/tenant-controller/pkg/tenant"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echopprof "github.com/sevennt/echo-pprof"
@@ -34,7 +34,7 @@ func serve(configFile string) {
 		log.Fatalln("Must specify the config file")
 	}
 
-	if err := pkg.SetConfig(configFile); err != nil {
+	if err := config.SetConfig(configFile); err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
@@ -49,7 +49,8 @@ func serve(configFile string) {
 		echopprof.Wrap(e)
 	}
 
-	e.POST("/tenant", api.CreateTenant)
+	e.GET("/health", func(c echo.Context) error { return c.JSON(200, map[string]string{"message": "ok"}) })
+	e.POST("/tenant", tenant.CreateTenant)
 
 	// Start server
 	go func() {

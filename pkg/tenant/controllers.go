@@ -1,4 +1,4 @@
-package api
+package tenant
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/flanksource/commons/logger"
-	"github.com/flanksource/tenant-controller/pkg"
+	v1 "github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg/git"
 	"github.com/flanksource/tenant-controller/pkg/secrets"
 	"github.com/labstack/echo/v4"
@@ -18,13 +18,13 @@ func CreateTenant(c echo.Context) error {
 	}
 	defer c.Request().Body.Close()
 
-	var reqBody pkg.TenantRequestBody
+	var reqBody v1.TenantRequestBody
 	if err := c.Bind(&reqBody); err != nil {
 		logger.Infof("Broken %v", err)
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
 
-	tenant, err := pkg.NewTenant(reqBody)
+	tenant, err := NewTenant(reqBody)
 	if err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
 	}
@@ -33,14 +33,14 @@ func CreateTenant(c echo.Context) error {
 	sc := GetSecretControllerFromCloud(tenant.Cloud)
 	sealedSecretRaw, err := sc.GenerateSealedSecret(secrets.SealedSecretParams{
 		Slug:     tenant.Slug,
-		Username: tenant.GenerateDBUsername(),
-		Password: tenant.GenerateDBPassword(),
+		Username: tenant.DBUsername,
+		Password: tenant.DBPassword,
 	})
 	if err != nil {
 		return errorResonse(c, fmt.Errorf("Error generating sealed secret: %s %v", string(sealedSecretRaw), err), http.StatusInternalServerError)
 	}
 
-	objs, err := pkg.GetTenantResources(tenant, string(sealedSecretRaw))
+	objs, err := GetTenantResources(tenant, string(sealedSecretRaw))
 	if err != nil {
 		return errorResonse(c, err, http.StatusInternalServerError)
 	}

@@ -11,8 +11,9 @@ import (
 
 	"github.com/flanksource/commons/logger"
 	v1 "github.com/flanksource/tenant-controller/api/v1"
-	"github.com/flanksource/tenant-controller/pkg"
+	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/git/connectors"
+	"github.com/flanksource/tenant-controller/pkg/utils"
 	"github.com/go-git/go-billy/v5"
 	gitv5 "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -23,8 +24,8 @@ import (
 	"sigs.k8s.io/kustomize/api/types"
 )
 
-func OpenPRWithTenantResources(tenant pkg.Tenant, tenantObjs []*unstructured.Unstructured) (pr int, hash string, err error) {
-	connector, err := connectors.NewConnector(pkg.Config.Git)
+func OpenPRWithTenantResources(tenant v1.Tenant, tenantObjs []*unstructured.Unstructured) (pr int, hash string, err error) {
+	connector, err := connectors.NewConnector(config.Config.Git)
 	if err != nil {
 		return
 	}
@@ -54,29 +55,29 @@ func OpenPRWithTenantResources(tenant pkg.Tenant, tenantObjs []*unstructured.Uns
 }
 
 func getTenantPRTemplate(title string) v1.PullRequestTemplate {
-	base := pkg.Config.Git.PullRequest.Base
+	base := config.Config.Git.PullRequest.Base
 	if base == "" {
 		base = "main"
 	}
-	prtitle := pkg.Config.Git.PullRequest.Title
+	prtitle := config.Config.Git.PullRequest.Title
 	if prtitle == "" {
 		prtitle = title
 	}
 
-	branch := slug.Make(title) + "-" + pkg.RandomString(4)
+	branch := slug.Make(title) + "-" + utils.RandomString(4)
 
 	return v1.PullRequestTemplate{
 		Base:      base,
 		Branch:    branch,
-		Body:      pkg.Config.Git.PullRequest.Body,
-		Title:     pkg.Config.Git.PullRequest.Title,
-		Reviewers: pkg.Config.Git.PullRequest.Reviewers,
-		Assignees: pkg.Config.Git.PullRequest.Assignees,
-		Tags:      pkg.Config.Git.PullRequest.Tags,
+		Body:      config.Config.Git.PullRequest.Body,
+		Title:     config.Config.Git.PullRequest.Title,
+		Reviewers: config.Config.Git.PullRequest.Reviewers,
+		Assignees: config.Config.Git.PullRequest.Assignees,
+		Tags:      config.Config.Git.PullRequest.Tags,
 	}
 }
 
-func CreateTenantResources(connector connectors.Connector, tenant pkg.Tenant, tenantObjs []*unstructured.Unstructured, prTemplate v1.PullRequestTemplate) (work *gitv5.Worktree, err error) {
+func CreateTenantResources(connector connectors.Connector, tenant v1.Tenant, tenantObjs []*unstructured.Unstructured, prTemplate v1.PullRequestTemplate) (work *gitv5.Worktree, err error) {
 	fs, work, err := connector.Clone(context.Background(), prTemplate.Base, prTemplate.Branch)
 	if err != nil {
 		return
@@ -114,8 +115,8 @@ func CreateTenantResources(connector connectors.Connector, tenant pkg.Tenant, te
 
 func CreateCommit(work *gitv5.Worktree, title string) (hash string, err error) {
 	author := &object.Signature{
-		Name:  pkg.Config.Git.User,
-		Email: pkg.Config.Git.Email,
+		Name:  config.Config.Git.User,
+		Email: config.Config.Git.Email,
 		When:  time.Now(),
 	}
 	if author.Name == "" {

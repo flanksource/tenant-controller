@@ -68,16 +68,16 @@ func getHost(cloud v1.CloudProvider, tenantName string) string {
 	}
 }
 
-func updateHostOnClerk(orgID, host string) error {
+func updateParamsOnClerk(tenant v1.Tenant) error {
 	client, err := clerk.NewClient(config.Config.Clerk.SecretKey)
 	if err != nil {
 		return err
 	}
 
-	params := clerk.UpdateOrganizationMetadataParams{
-		PublicMetadata: []byte(fmt.Sprintf(`{"backend_url": "https://%s"}`, host)),
-	}
-	if _, err := client.Organizations().UpdateMetadata(orgID, params); err != nil {
+	if _, err := client.Organizations().Update(tenant.OrgID, clerk.UpdateOrganizationParams{
+		Slug:           &tenant.Slug,
+		PublicMetadata: []byte(fmt.Sprintf(`{"backend_url": "https://%s"}`, tenant.Host)),
+	}); err != nil {
 		return err
 	}
 

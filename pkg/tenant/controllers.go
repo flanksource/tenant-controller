@@ -36,9 +36,9 @@ func CreateTenant(c echo.Context) error {
 	// TODO: Webhook does not tell which cloud provider
 	sc := GetSecretControllerFromCloud(tenant.Cloud)
 	sealedSecretRaw, err := sc.GenerateSealedSecret(secrets.SealedSecretParams{
-		Slug:     tenant.Slug,
-		Username: tenant.DBUsername,
-		Password: tenant.DBPassword,
+		Namespace: tenant.OrgID,
+		Username:  tenant.DBUsername,
+		Password:  tenant.DBPassword,
 	})
 	if err != nil {
 		return errorResonse(c, fmt.Errorf("Error generating sealed secret: %s %v", string(sealedSecretRaw), err), http.StatusInternalServerError)

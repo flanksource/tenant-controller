@@ -4,17 +4,17 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/flanksource/tenant-controller/pkg"
+	"github.com/flanksource/tenant-controller/pkg/config"
 )
 
 type AzureSealedSecret struct{}
 
 func (s *AzureSealedSecret) GenerateSealedSecret(params SealedSecretParams) ([]byte, error) {
-	fileName, err := createDBSecretFile(params.Slug, params.Username, params.Password)
+	fileName, err := createDBSecretFile(params.Namespace, params.Username, params.Password)
 	if err != nil {
 		return nil, err
 	}
-	pkg.Config.Azure.SetEnvs()
+	config.Config.Azure.SetEnvs()
 
 	return exec.Command(
 		"sops", "--encrypt",

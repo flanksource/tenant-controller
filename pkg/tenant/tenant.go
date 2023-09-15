@@ -2,7 +2,6 @@ package tenant
 
 import (
 	"fmt"
-	"math/rand"
 	"path"
 	"strings"
 
@@ -30,18 +29,18 @@ func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
 		slug = goslug.Make(req.Data.Name)
 	}
 
-	// For keeping postgres user and database name simple
-	slug = strings.ReplaceAll(slug, "-", "_")
+	// Kubernetes namespaces cannot have `_`
+	id := strings.Replace(req.Data.OrgID, "org_", "org-", 1)
 
 	return v1.Tenant{
 		Name:              req.Data.Name,
-		OrgID:             req.Data.OrgID,
+		OrgID:             id,
 		Cloud:             cloud,
 		Slug:              slug,
 		KustomizationPath: kPath,
-		ContentPath:       path.Join(path.Dir(kPath), slug),
-		Host:              getHost(cloud, slug),
-		DBUsername:        fmt.Sprintf("%s_%d", strings.ToLower(slug), rand.Intn(1000)),
+		ContentPath:       path.Join(path.Dir(kPath), id),
+		Host:              getHost(cloud, id),
+		DBUsername:        id,
 		DBPassword:        utils.RandomString(16),
 	}, nil
 }
@@ -57,10 +56,10 @@ func getClusterName(cloud v1.CloudProvider) string {
 	return ""
 }
 
-func getHost(cloud v1.CloudProvider, tenantName string) string {
+func getHost(cloud v1.CloudProvider, tenantID string) string {
 	switch cloud {
 	case v1.AZURE:
-		return fmt.Sprintf("mission-control.%s.internal-prod.flanksource.com", tenantName)
+		return fmt.Sprintf("mission-control.%s.internal-prod.flanksource.com", tenantID)
 	case v1.AWS:
 		return ""
 	default:

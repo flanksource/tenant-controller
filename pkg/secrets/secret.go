@@ -7,9 +7,9 @@ import (
 )
 
 type SealedSecretParams struct {
-	Slug     string
-	Username string
-	Password string
+	Namespace string
+	Username  string
+	Password  string
 }
 
 type Secrets interface {
@@ -19,13 +19,13 @@ type Secrets interface {
 
 // create a function that creates a kubernetes secret object structure and write it into a file
 
-func createDBSecretFile(slug, username, password string) (string, error) {
+func createDBSecretFile(namespace, username, password string) (string, error) {
 	manifest := map[string]any{
 		"apiVersion": "v1",
 		"kind":       "Secret",
 		"metadata": map[string]any{
 			"name":      "db-credentials",
-			"namespace": slug,
+			"namespace": namespace,
 			"labels": map[string]string{
 				"flanksource.com/watch-pgsyncer": "true",
 			},

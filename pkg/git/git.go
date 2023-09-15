@@ -106,7 +106,7 @@ func CreateTenantResources(connector connectors.Connector, tenant v1.Tenant, ten
 
 	// TODO: This should not append the resources, tenant yaml files should be in
 	// their own directories
-	kustomization.Resources = append(kustomization.Resources, tenant.Slug)
+	kustomization.Resources = append(kustomization.Resources, tenant.ID)
 	existingKustomization, err := yaml.Marshal(kustomization)
 	if err != nil {
 		return nil, err

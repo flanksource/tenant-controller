@@ -32,6 +32,7 @@ type Tenant struct {
 	Name  string        `json:"name"`
 	Cloud CloudProvider `json:"cloud"`
 	Slug  string        `json:"slug"`
+	ID    string        `json:"id"`
 	OrgID string        `json:"org_id"`
 	Host  string        `json:"host"`
 

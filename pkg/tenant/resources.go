@@ -65,7 +65,7 @@ func GetTenantResources(tenant v1.Tenant, sealedSecret string) (obj []*unstructu
 		"slug":    tenant.Slug,
 		"host":    tenant.Host,
 		"jwksURL": config.Config.Clerk.JWKSURL,
-		"orgID":   tenant.OrgID,
+		"orgID":   tenant.ID,
 	}
 	helmReleaseRaw, err := utils.Template(HELM_RELEASE_TEMPLATE, vars)
 	if err != nil {

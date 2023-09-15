@@ -33,8 +33,9 @@ func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
 	id := strings.Replace(req.Data.OrgID, "org_", "org-", 1)
 
 	return v1.Tenant{
+		ID:                id,
 		Name:              req.Data.Name,
-		OrgID:             id,
+		OrgID:             req.Data.OrgID,
 		Cloud:             cloud,
 		Slug:              slug,
 		KustomizationPath: kPath,

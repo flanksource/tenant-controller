@@ -12,8 +12,8 @@ const (
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
 metadata:
-  name: {{.orgID}}
-  namespace: {{.orgID}}
+  name: {{.id}}
+  namespace: {{.id}}
   annotations:
     flanksource.com/tenant-slug: {{.slug}}
 spec:
@@ -35,8 +35,8 @@ spec:
     vcluster:
       syncer:
         extraArgs:
-          - --tls-san={{.orgID}}.{{.orgID}}.svc
-          - --out-kube-config-server=https://{{.orgID}}.{{.orgID}}.svc
+          - --tls-san={{.id}}.{{.id}}.svc
+          - --out-kube-config-server=https://{{.id}}.{{.id}}.svc
     missionControl:
       authProvider: clerk
       clerkJWKSURL: {{.jwksURL}}
@@ -47,7 +47,7 @@ spec:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{.orgID}}
+  name: {{.id}}
 `
 
 	KUSTOMIZATION_RAW = `
@@ -65,7 +65,8 @@ func GetTenantResources(tenant v1.Tenant, sealedSecret string) (obj []*unstructu
 		"slug":    tenant.Slug,
 		"host":    tenant.Host,
 		"jwksURL": config.Config.Clerk.JWKSURL,
-		"orgID":   tenant.ID,
+		"id":      tenant.ID,
+		"orgID":   tenant.OrgID,
 	}
 	helmReleaseRaw, err := utils.Template(HELM_RELEASE_TEMPLATE, vars)
 	if err != nil {

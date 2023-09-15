@@ -29,19 +29,24 @@ func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
 		slug = goslug.Make(req.Data.Name)
 	}
 
+	orgID := req.Data.OrgID
+
 	// Kubernetes namespaces cannot have `_`
-	id := strings.Replace(req.Data.OrgID, "org_", "org-", 1)
+	// We are taking the last 12 chars to due to constraints
+	// on domain name length and kubenretes resource name length
+	_id := strings.ToLower(strings.Replace(orgID, "org_", "", 1))
+	id := fmt.Sprintf("org-%s", _id[len(_id)-12:])
 
 	return v1.Tenant{
 		ID:                id,
 		Name:              req.Data.Name,
-		OrgID:             req.Data.OrgID,
+		OrgID:             orgID,
 		Cloud:             cloud,
 		Slug:              slug,
 		KustomizationPath: kPath,
 		ContentPath:       path.Join(path.Dir(kPath), id),
 		Host:              getHost(cloud, id),
-		DBUsername:        id,
+		DBUsername:        strings.ToLower(orgID),
 		DBPassword:        utils.RandomString(16),
 	}, nil
 }

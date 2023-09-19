@@ -1,9 +1,5 @@
 package v1
 
-import (
-	"os"
-)
-
 type CloudProvider string
 
 const (
@@ -33,11 +29,4 @@ type AzureConfig struct {
 type ClerkConfig struct {
 	SecretKey string `json:"secretKey" yaml:"secretKey"`
 	JWKSURL   string `json:"jwks_url" yaml:"jwks_url"`
-}
-
-func (a *AzureConfig) SetEnvs() {
-	os.Setenv("AZURE_CLIENT_SECRET", a.ClientSecret)
-	os.Setenv("AZURE_CLIENT_ID", a.ClientID)
-	os.Setenv("AZURE_TENANT_ID", a.TenantID)
-	os.Setenv("AZURE_VAULT_URL", a.VaultURI)
 }

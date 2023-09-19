@@ -1,7 +1,7 @@
 package secrets
 
 import (
-	"os"
+	"fmt"
 	"os/exec"
 
 	"github.com/flanksource/tenant-controller/pkg/config"
@@ -14,12 +14,19 @@ func (s *AzureSealedSecret) GenerateSealedSecret(params SealedSecretParams) ([]b
 	if err != nil {
 		return nil, err
 	}
-	config.Config.Azure.SetEnvs()
 
-	return exec.Command(
+	cmd := exec.Command(
 		"sops", "--encrypt",
 		"--encrypted-regex", "stringData",
-		"--azure-kv", os.Getenv("AZURE_VAULT_URL"),
+		"--azure-kv", config.Config.Azure.VaultURI,
 		fileName,
-	).CombinedOutput()
+	)
+
+	cmd.Env = append(cmd.Env,
+		fmt.Sprintf("AZURE_CLIENT_ID=%s", config.Config.Azure.ClientID),
+		fmt.Sprintf("AZURE_TENANT_ID=%s", config.Config.Azure.TenantID),
+		fmt.Sprintf("AZURE_CLIENT_SECRET=%s", config.Config.Azure.ClientSecret),
+	)
+
+	return cmd.CombinedOutput()
 }

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: tenant-controller
-          image: docker.io/flanksource/tenant-controller:v1.0.2
+          image: docker.io/flanksource/tenant-controller:v1.0.12
           command:
             - /app/tenant-controller
           args:

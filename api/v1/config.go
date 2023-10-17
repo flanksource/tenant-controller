@@ -27,6 +27,7 @@ type AzureConfig struct {
 }
 
 type ClerkConfig struct {
-	SecretKey string `json:"secretKey" yaml:"secretKey"`
-	JWKSURL   string `json:"jwks_url" yaml:"jwks_url"`
+	SecretKey     string `json:"secretKey" yaml:"secretKey"`
+	JWKSURL       string `json:"jwks_url" yaml:"jwks_url"`
+	WebhookSecret string `json:"webhook_secret" yaml:"webhook_secret"`
 }

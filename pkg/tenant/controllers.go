@@ -1,16 +1,19 @@
 package tenant
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 
-	"github.com/flanksource/commons/logger"
 	v1 "github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg/git"
 	"github.com/flanksource/tenant-controller/pkg/secrets"
 	"github.com/labstack/echo/v4"
 )
+
+var ClerkTenantWebhook *Webhook
 
 func CreateTenant(c echo.Context) error {
 	if c.Request().Body == nil {
@@ -18,10 +21,20 @@ func CreateTenant(c echo.Context) error {
 	}
 	defer c.Request().Body.Close()
 
+	body, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		errorResonse(c, err, http.StatusBadRequest)
+	}
+
 	var reqBody v1.TenantRequestBody
-	if err := c.Bind(&reqBody); err != nil {
-		logger.Infof("Broken %v", err)
+	if err := json.Unmarshal(body, &reqBody); err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
+	}
+
+	// Ignoring timestamp since the tolerance is 5mins
+	// How to replay older message for whom tenant creation failed ?
+	if err := ClerkTenantWebhook.VerifyIgnoringTimestamp(body, c.Request().Header); err != nil {
+		return errorResonse(c, fmt.Errorf("webhook verification failed: %w", err), http.StatusBadRequest)
 	}
 
 	tenant, err := NewTenant(reqBody)

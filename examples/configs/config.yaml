@@ -7,6 +7,7 @@ azure:
   vault_uri: <VAULT_URI>
 clerk:
   jwks_url: <JWKS URL>
+  webhook_secret: <webhook_signing_secret>
 git:
   repository: https://github.com/flanksource/sass-dev
   user: flankbot

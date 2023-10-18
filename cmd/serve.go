@@ -49,6 +49,12 @@ func serve(configFile string) {
 		echopprof.Wrap(e)
 	}
 
+	var err error
+	tenant.ClerkTenantWebhook, err = tenant.NewWebhook(config.Config.Clerk.WebhookSecret)
+	if err != nil {
+		log.Fatalf("Error setting up webhook: %v", err)
+	}
+
 	e.GET("/health", func(c echo.Context) error { return c.JSON(200, map[string]string{"message": "ok"}) })
 	e.POST("/tenant", tenant.CreateTenant)
 

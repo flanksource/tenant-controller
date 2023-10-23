@@ -54,3 +54,21 @@ jobs:
         with:
           push: true
           tags: docker.io/flanksource/tenant-controller:v${{ env.RELEASE_VERSION }}
+
+      - uses: actions/checkout@v3
+        with:
+          repository: "${{ github.repository_owner }}/azure-production"
+          token: ${{ secrets.FLANKBOT }}
+          path: ./azure-production
+
+      - name: Update image tags in azure-production repo
+        uses: mikefarah/yq@9b4082919bf50bb6be38742adf46f888e9f5683a # master
+        with:
+          cmd: yq -i e '.spec.template.spec.containers[0].image = "docker.io/flanksource/tenant-controller:v${{ env.RELEASE_VERSION }}"' azure-production/specs/bases/apps/tenant-controller/deployment.yml
+
+      - name: Push changes to chart repo
+        uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a # v4.16.0
+        with:
+          commit_message: "chore: update tenant-controller image version to ${{ env.RELEASE_VERSION }}"
+          repository: ./azure-production
+          branch: main

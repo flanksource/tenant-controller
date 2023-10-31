@@ -37,7 +37,7 @@ spec:
         extraArgs:
           - --tls-san={{.id}}.{{.id}}.svc
           - --out-kube-config-server=https://{{.id}}.{{.id}}.svc
-	  - --sync-labels=app.kubernetes.io/name
+          - --sync-labels=app.kubernetes.io/name
     missionControl:
       authProvider: clerk
       clerkJWKSURL: {{.jwksURL}}

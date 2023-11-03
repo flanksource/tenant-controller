@@ -32,6 +32,7 @@ spec:
     crds: CreateReplace
   values:
     domain: {{.host}}
+    tenantSlug: {{.slug}}
     vcluster:
       syncer:
         extraArgs:

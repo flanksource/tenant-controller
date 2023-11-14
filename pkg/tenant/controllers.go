@@ -59,12 +59,12 @@ func CreateTenant(c echo.Context) error {
 
 	objs, err := GetTenantResources(tenant, string(sealedSecretRaw))
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResonse(c, fmt.Errorf("error creating tenant resources: %w", err), http.StatusInternalServerError)
 	}
 
 	pr, hash, err := git.OpenPRWithTenantResources(tenant, objs)
 	if err != nil {
-		return errorResonse(c, err, http.StatusInternalServerError)
+		return errorResonse(c, fmt.Errorf("erorr commiting to git: %w", err), http.StatusInternalServerError)
 	}
 
 	return c.String(http.StatusAccepted, fmt.Sprintf("Committed %s, PR: %d ", hash, pr))

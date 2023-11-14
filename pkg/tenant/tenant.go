@@ -55,7 +55,7 @@ func getClusterName(cloud v1.CloudProvider) string {
 	// TODO: Take this from config
 	switch cloud {
 	case v1.AZURE:
-		return "azure-internal-prod"
+		return "workload-prod-eu-01"
 	case v1.AWS:
 		return "aws-demo"
 	}
@@ -65,7 +65,7 @@ func getClusterName(cloud v1.CloudProvider) string {
 func getHost(cloud v1.CloudProvider, tenantID string) string {
 	switch cloud {
 	case v1.AZURE:
-		return fmt.Sprintf("mission-control.%s.internal-prod.flanksource.com", tenantID)
+		return fmt.Sprintf("mc.%s.workload-prod-eu-01.flanksource.com", tenantID)
 	case v1.AWS:
 		return ""
 	default:

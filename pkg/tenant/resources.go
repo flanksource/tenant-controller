@@ -24,7 +24,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: flanksource
-        namespace: production
+        namespace: mission-control
       interval: 1m
   install:
     crds: CreateReplace

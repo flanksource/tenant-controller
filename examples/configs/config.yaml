@@ -1,10 +1,14 @@
 aws:
   key: some-arn
+  tenant_cluster: aws-cluster-name
+  tenant_host_fmt: mc.%s.aws-domain.flanksource.com
 azure:
   tenant_id: <TENANT_ID>
   client_secret: <CLIENT_SECRET>
   client_id: <CLIENT_ID>
   vault_uri: <VAULT_URI>
+  tenant_cluster: azure-cluster-name
+  tenant_host_fmt: mc.%s.azure-domain.flanksource.com
 clerk:
   jwks_url: <JWKS URL>
   webhook_secret: <webhook_signing_secret>

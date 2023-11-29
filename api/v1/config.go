@@ -16,14 +16,18 @@ type Config struct {
 
 type AWSConfig struct {
 	// ARN of the key to use for encryption
-	Key string `json:"key" yaml:"key"`
+	Key              string `json:"key" yaml:"key"`
+	TenantCluster    string `json:"tenant_cluster" yaml:"tenant_cluster"`
+	TenantHostFormat string `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
 }
 
 type AzureConfig struct {
-	TenantID     string `json:"tenant_id" yaml:"tenant_id"`
-	ClientID     string `json:"client_id" yaml:"client_id"`
-	ClientSecret string `json:"client_secret" yaml:"client_secret"`
-	VaultURI     string `json:"vault_uri" yaml:"vault_url"`
+	TenantID         string `json:"tenant_id" yaml:"tenant_id"`
+	ClientID         string `json:"client_id" yaml:"client_id"`
+	ClientSecret     string `json:"client_secret" yaml:"client_secret"`
+	VaultURI         string `json:"vault_uri" yaml:"vault_url"`
+	TenantCluster    string `json:"tenant_cluster" yaml:"tenant_cluster"`
+	TenantHostFormat string `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
 }
 
 type ClerkConfig struct {

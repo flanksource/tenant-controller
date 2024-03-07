@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.7.0
-	golang.org/x/crypto v0.17.0
+	golang.org/x/crypto v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -23,7 +23,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.1 // indirect
+	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
@@ -69,7 +69,7 @@ require (
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.9.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect

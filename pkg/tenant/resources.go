@@ -43,6 +43,8 @@ spec:
       authProvider: clerk
       clerkJWKSURL: {{.jwksURL}}
       clerkOrgID: {{.orgID}}
+      otel:
+        labels: "tenant.id={{.orgID}}"
 `
 
 	NAMESPACE_TEMPLATE = `

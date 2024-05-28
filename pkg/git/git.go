@@ -19,7 +19,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/gosimple/slug"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/kustomize/api/types"
 )
@@ -107,7 +107,7 @@ func CreateTenantResources(connector connectors.Connector, tenant v1.Tenant, ten
 	// TODO: This should not append the resources, tenant yaml files should be in
 	// their own directories
 	kustomization.Resources = append(kustomization.Resources, tenant.ID)
-	existingKustomization, err := yaml.Marshal(kustomization)
+	existingKustomization, err := utils.MarshalYAML(kustomization)
 	if err != nil {
 		return nil, err
 	}

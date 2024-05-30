@@ -1,6 +1,7 @@
 package tenant
 
 import (
+	"encoding/json"
 	"fmt"
 	"path"
 	"strings"
@@ -10,6 +11,11 @@ import (
 	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/utils"
 	goslug "github.com/gosimple/slug"
+)
+
+const (
+	TenantStateActive    = "active"
+	TenantStateSuspended = "suspended"
 )
 
 func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
@@ -79,9 +85,17 @@ func updateParamsOnClerk(tenant v1.Tenant) error {
 		return fmt.Errorf("error creating clerk client: %w", err)
 	}
 
+	pubMetadata, err := json.Marshal(map[string]string{
+		"backend_url": fmt.Sprintf("https://%s", tenant.Host),
+		"tenant_id":   tenant.ID,
+		"state":       TenantStateActive,
+	})
+	if err != nil {
+		return fmt.Errorf("error marshaling public metadata to json: %w", err)
+	}
 	if _, err := client.Organizations().Update(tenant.OrgID, clerk.UpdateOrganizationParams{
 		Slug:           &tenant.Slug,
-		PublicMetadata: []byte(fmt.Sprintf(`{"backend_url": "https://%s"}`, tenant.Host)),
+		PublicMetadata: pubMetadata,
 	}); err != nil {
 		return fmt.Errorf("error updating org on clerk: %w", err)
 	}

@@ -11,7 +11,6 @@ import (
 
 	"github.com/flanksource/commons/logger"
 	v1 "github.com/flanksource/tenant-controller/api/v1"
-	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/git/connectors"
 	"github.com/flanksource/tenant-controller/pkg/utils"
 	"github.com/go-git/go-billy/v5"
@@ -25,7 +24,7 @@ import (
 )
 
 func OpenPRWithTenantResources(tenant v1.Tenant, tenantObjs []*unstructured.Unstructured) (pr int, hash string, err error) {
-	connector, err := connectors.NewConnector(config.Config.Git)
+	connector, err := connectors.NewConnector(v1.GlobalConfig.Git)
 	if err != nil {
 		return
 	}
@@ -56,16 +55,16 @@ func OpenPRWithTenantResources(tenant v1.Tenant, tenantObjs []*unstructured.Unst
 }
 
 func getTenantPRTemplate(title string) v1.PullRequestTemplate {
-	base := config.Config.Git.PullRequest.Base
+	base := v1.GlobalConfig.Git.PullRequest.Base
 	if base == "" {
 		base = "main"
 	}
-	prtitle := config.Config.Git.PullRequest.Title
+	prtitle := v1.GlobalConfig.Git.PullRequest.Title
 	if prtitle == "" {
 		prtitle = title
 	}
 
-	branch := config.Config.Git.PullRequest.Branch
+	branch := v1.GlobalConfig.Git.PullRequest.Branch
 	if branch == "" {
 		branch = slug.Make(title) + "-" + utils.RandomString(4)
 	}
@@ -73,11 +72,11 @@ func getTenantPRTemplate(title string) v1.PullRequestTemplate {
 	return v1.PullRequestTemplate{
 		Base:      base,
 		Branch:    branch,
-		Body:      config.Config.Git.PullRequest.Body,
-		Title:     config.Config.Git.PullRequest.Title,
-		Reviewers: config.Config.Git.PullRequest.Reviewers,
-		Assignees: config.Config.Git.PullRequest.Assignees,
-		Tags:      config.Config.Git.PullRequest.Tags,
+		Body:      v1.GlobalConfig.Git.PullRequest.Body,
+		Title:     v1.GlobalConfig.Git.PullRequest.Title,
+		Reviewers: v1.GlobalConfig.Git.PullRequest.Reviewers,
+		Assignees: v1.GlobalConfig.Git.PullRequest.Assignees,
+		Tags:      v1.GlobalConfig.Git.PullRequest.Tags,
 	}
 }
 
@@ -119,8 +118,8 @@ func CreateTenantResources(connector connectors.Connector, tenant v1.Tenant, ten
 
 func CreateCommit(work *gitv5.Worktree, title string) (hash string, err error) {
 	author := &object.Signature{
-		Name:  config.Config.Git.User,
-		Email: config.Config.Git.Email,
+		Name:  v1.GlobalConfig.Git.User,
+		Email: v1.GlobalConfig.Git.Email,
 		When:  time.Now(),
 	}
 	if author.Name == "" {

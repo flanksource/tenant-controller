@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/flanksource/commons/logger"
+	"github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/tenant"
 	"github.com/labstack/echo/v4"
@@ -50,7 +51,7 @@ func serve(configFile string) {
 	}
 
 	var err error
-	tenant.ClerkTenantWebhook, err = tenant.NewWebhook(config.Config.Clerk.WebhookSecret)
+	tenant.ClerkTenantWebhook, err = tenant.NewWebhook(v1.GlobalConfig.Clerk.WebhookSecret)
 	if err != nil {
 		log.Fatalf("Error setting up webhook: %v", err)
 	}

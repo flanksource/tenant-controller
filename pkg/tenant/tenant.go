@@ -8,7 +8,6 @@ import (
 
 	"github.com/clerkinc/clerk-sdk-go/clerk"
 	"github.com/flanksource/tenant-controller/api/v1"
-	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/utils"
 	goslug "github.com/gosimple/slug"
 )
@@ -19,11 +18,10 @@ const (
 )
 
 func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
-	// TODO: Hardcoded for now
-	cloud := v1.AZURE
+	cloud := v1.CloudProvider(v1.GlobalConfig.DefaultCloud)
 
-	kPath, err := utils.Template(config.Config.Git.KustomizationPath, map[string]any{
-		"cluster": getClusterName(cloud),
+	kPath, err := utils.Template(v1.GlobalConfig.Git.KustomizationPath, map[string]any{
+		"cluster": cloud.GetClusterName(),
 	})
 	if err != nil {
 		return v1.Tenant{}, err
@@ -51,7 +49,7 @@ func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
 		Slug:              slug,
 		KustomizationPath: kPath,
 		ContentPath:       path.Join(path.Dir(kPath), id),
-		Host:              getHost(cloud, id),
+		Host:              cloud.GetHost(id),
 		DBUsername:        strings.ToLower(orgID),
 		DBPassword:        utils.RandomString(16),
 	}, nil
@@ -60,27 +58,31 @@ func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
 func getClusterName(cloud v1.CloudProvider) string {
 	// TODO: Take this from config
 	switch cloud {
-	case v1.AZURE:
-		return config.Config.Azure.TenantCluster
+	case v1.Azure:
+		return v1.GlobalConfig.Azure.TenantCluster
 	case v1.AWS:
-		return config.Config.AWS.TenantCluster
+		return v1.GlobalConfig.AWS.TenantCluster
+	case v1.GCP:
+		return v1.GlobalConfig.GCP.TenantCluster
 	}
 	return ""
 }
 
 func getHost(cloud v1.CloudProvider, tenantID string) string {
 	switch cloud {
-	case v1.AZURE:
-		return fmt.Sprintf(config.Config.Azure.TenantHostFormat, tenantID)
+	case v1.Azure:
+		return fmt.Sprintf(v1.GlobalConfig.Azure.TenantHostFormat, tenantID)
 	case v1.AWS:
-		return fmt.Sprintf(config.Config.AWS.TenantHostFormat, tenantID)
+		return fmt.Sprintf(v1.GlobalConfig.AWS.TenantHostFormat, tenantID)
+	case v1.GCP:
+		return fmt.Sprintf(v1.GlobalConfig.GCP.TenantHostFormat, tenantID)
 	default:
 		return ""
 	}
 }
 
 func updateParamsOnClerk(tenant v1.Tenant) error {
-	client, err := clerk.NewClient(config.Config.Clerk.SecretKey)
+	client, err := clerk.NewClient(v1.GlobalConfig.Clerk.SecretKey)
 	if err != nil {
 		return fmt.Errorf("error creating clerk client: %w", err)
 	}

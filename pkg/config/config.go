@@ -10,8 +10,6 @@ import (
 	v1 "github.com/flanksource/tenant-controller/api/v1"
 )
 
-var Config *v1.Config
-
 func SetConfig(configFile string) error {
 	config, err := ParseConfig(configFile)
 	if err != nil {
@@ -20,7 +18,7 @@ func SetConfig(configFile string) error {
 	if err := validateConfig(config); err != nil {
 		return err
 	}
-	Config = config
+	v1.GlobalConfig = config
 	return nil
 }
 
@@ -40,11 +38,17 @@ func ParseConfig(configFile string) (config *v1.Config, err error) {
 // Certain fields have to be set so check
 // those at start time and panic if validation fails
 func validateConfig(config *v1.Config) error {
-	if config.Azure.TenantHostFormat == "" {
-		return fmt.Errorf("azure.tenant_host_fmt cannot be empty")
+	if config.DefaultCloud == "" {
+		return fmt.Errorf("default_cloud cannot be empty")
 	}
-	if config.Azure.TenantCluster == "" {
-		return fmt.Errorf("azure.tenant_cluster cannot be empty")
+
+	if config.DefaultCloud == v1.Azure {
+		if config.Azure.TenantHostFormat == "" {
+			return fmt.Errorf("azure.tenant_host_fmt cannot be empty")
+		}
+		if config.Azure.TenantCluster == "" {
+			return fmt.Errorf("azure.tenant_cluster cannot be empty")
+		}
 	}
 	return nil
 }

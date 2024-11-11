@@ -2,7 +2,6 @@ package tenant
 
 import (
 	v1 "github.com/flanksource/tenant-controller/api/v1"
-	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/utils"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
@@ -66,7 +65,7 @@ func GetTenantResources(tenant v1.Tenant, sealedSecret string) (obj []*unstructu
 	vars := map[string]any{
 		"slug":    tenant.Slug,
 		"host":    tenant.Host,
-		"jwksURL": config.Config.Clerk.JWKSURL,
+		"jwksURL": v1.GlobalConfig.Clerk.JWKSURL,
 		"id":      tenant.ID,
 		"orgID":   tenant.OrgID,
 	}

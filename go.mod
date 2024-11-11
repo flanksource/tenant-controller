@@ -1,6 +1,6 @@
 module github.com/flanksource/tenant-controller
 
-go 1.20
+go 1.23
 
 require (
 	github.com/clerkinc/clerk-sdk-go v1.48.1
@@ -9,6 +9,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	golang.org/x/crypto v0.17.0
 	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -77,7 +78,6 @@ require (
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20230601164746-7562a1006961 // indirect
 	k8s.io/utils v0.0.0-20230711102312-30195339c3c7 // indirect

@@ -32,6 +32,7 @@ spec:
   values:
     domain: {{.host}}
     tenantSlug: {{.slug}}
+    cloud: {{.cloud}}
     vcluster:
       syncer:
         extraArgs:
@@ -68,6 +69,7 @@ func GetTenantResources(tenant v1.Tenant, sealedSecret string) (obj []*unstructu
 		"jwksURL": v1.GlobalConfig.Clerk.JWKSURL,
 		"id":      tenant.ID,
 		"orgID":   tenant.OrgID,
+		"cloud":   tenant.Cloud,
 	}
 	helmReleaseRaw, err := utils.Template(HELM_RELEASE_TEMPLATE, vars)
 	if err != nil {

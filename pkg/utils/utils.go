@@ -37,6 +37,9 @@ func RandomString(length uint) string {
 func GetUnstructuredObjects(data ...string) ([]*unstructured.Unstructured, error) {
 	var items []*unstructured.Unstructured
 	for _, d := range data {
+		if d == "" {
+			continue
+		}
 		decoder := yamlutil.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(d)), 1024)
 		var resource *unstructured.Unstructured
 

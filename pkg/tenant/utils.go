@@ -15,6 +15,8 @@ func GetSecretControllerFromCloud(cloud v1.CloudProvider) secrets.Secrets {
 	switch cloud {
 	case v1.Azure:
 		return &secrets.AzureSealedSecret{}
+	case v1.GCP:
+		return &secrets.GCPSealedSecret{}
 	}
 	return nil
 }

@@ -18,10 +18,8 @@ const (
 )
 
 func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
-	cloud := v1.CloudProvider(v1.GlobalConfig.DefaultCloud)
-
 	kPath, err := utils.Template(v1.GlobalConfig.Git.KustomizationPath, map[string]any{
-		"cluster": cloud.GetClusterName(),
+		"cluster": v1.GlobalConfig.GetClusterName(),
 	})
 	if err != nil {
 		return v1.Tenant{}, err
@@ -45,40 +43,14 @@ func NewTenant(req v1.TenantRequestBody) (v1.Tenant, error) {
 		ID:                id,
 		Name:              req.Data.Name,
 		OrgID:             orgID,
-		Cloud:             cloud,
+		Cloud:             v1.GlobalConfig.DefaultCloud,
 		Slug:              slug,
 		KustomizationPath: kPath,
 		ContentPath:       path.Join(path.Dir(kPath), id),
-		Host:              cloud.GetHost(id),
+		Host:              v1.GlobalConfig.GetHost(id),
 		DBUsername:        strings.ToLower(orgID),
 		DBPassword:        utils.RandomString(16),
 	}, nil
-}
-
-func getClusterName(cloud v1.CloudProvider) string {
-	// TODO: Take this from config
-	switch cloud {
-	case v1.Azure:
-		return v1.GlobalConfig.Azure.TenantCluster
-	case v1.AWS:
-		return v1.GlobalConfig.AWS.TenantCluster
-	case v1.GCP:
-		return v1.GlobalConfig.GCP.TenantCluster
-	}
-	return ""
-}
-
-func getHost(cloud v1.CloudProvider, tenantID string) string {
-	switch cloud {
-	case v1.Azure:
-		return fmt.Sprintf(v1.GlobalConfig.Azure.TenantHostFormat, tenantID)
-	case v1.AWS:
-		return fmt.Sprintf(v1.GlobalConfig.AWS.TenantHostFormat, tenantID)
-	case v1.GCP:
-		return fmt.Sprintf(v1.GlobalConfig.GCP.TenantHostFormat, tenantID)
-	default:
-		return ""
-	}
 }
 
 func updateParamsOnClerk(tenant v1.Tenant) error {

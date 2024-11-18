@@ -39,7 +39,7 @@ func (cloud CloudProvider) GetHost(tenantID string) string {
 }
 
 type Config struct {
-	DefaultCloud string         `json:"default_cloud" yaml:"default_cloud"`
+	DefaultCloud CloudProvider  `json:"default_cloud" yaml:"default_cloud"`
 	Git          *GitopsAPISpec `json:"git" yaml:"git"`
 	AWS          *AWSConfig     `json:"aws" yaml:"aws"`
 	Azure        *AzureConfig   `json:"azure" yaml:"azure"`
@@ -64,10 +64,7 @@ type AzureConfig struct {
 }
 
 type GCPConfig struct {
-	TenantID         string `json:"tenant_id" yaml:"tenant_id"`
-	ClientID         string `json:"client_id" yaml:"client_id"`
-	ClientSecret     string `json:"client_secret" yaml:"client_secret"`
-	VaultURI         string `json:"vault_uri" yaml:"vault_url"`
+	KMS              string `json:"kms" yaml:"kms"`
 	TenantCluster    string `json:"tenant_cluster" yaml:"tenant_cluster"`
 	TenantHostFormat string `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
 }
@@ -76,4 +73,12 @@ type ClerkConfig struct {
 	SecretKey     string `json:"secretKey" yaml:"secretKey"`
 	JWKSURL       string `json:"jwks_url" yaml:"jwks_url"`
 	WebhookSecret string `json:"webhook_secret" yaml:"webhook_secret"`
+}
+
+func (c Config) GetClusterName() string {
+	return c.DefaultCloud.GetClusterName()
+}
+
+func (c Config) GetHost(tenantID string) string {
+	return c.DefaultCloud.GetHost(tenantID)
 }

@@ -98,7 +98,7 @@ func CreateTenantResources(connector connectors.Connector, tenant v1.Tenant, ten
 		}
 	}
 	// update root kustomization and add tenant kustomization to it
-	kustomization, err := getKustomizaton(fs, tenant.KustomizationPath)
+	kustomization, err := GetKustomizaton(fs, tenant.KustomizationPath)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func openOrCreate(path string, fs billy.Filesystem) (billy.File, error) {
 	return fs.Create(path)
 }
 
-func getKustomizaton(fs billy.Filesystem, path string) (*types.Kustomization, error) {
+func GetKustomizaton(fs billy.Filesystem, path string) (*types.Kustomization, error) {
 	kustomization := types.Kustomization{}
 
 	if _, err := fs.Stat(path); err != nil {

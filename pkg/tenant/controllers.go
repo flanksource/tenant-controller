@@ -1,16 +1,24 @@
 package tenant
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
+	"github.com/flanksource/commons/logger"
 	v1 "github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg/git"
+	"github.com/flanksource/tenant-controller/pkg/git/connectors"
 	"github.com/flanksource/tenant-controller/pkg/secrets"
+	"github.com/flanksource/tenant-controller/pkg/utils"
 	"github.com/labstack/echo/v4"
+	"github.com/samber/lo"
+	k8sv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var ClerkTenantWebhook *Webhook
@@ -29,6 +37,10 @@ func CreateTenant(c echo.Context) error {
 	var reqBody v1.TenantRequestBody
 	if err := json.Unmarshal(body, &reqBody); err != nil {
 		return errorResonse(c, err, http.StatusBadRequest)
+	}
+
+	if reqBody.Type != "organization.created" {
+		return c.String(http.StatusAlreadyReported, "Only organization.created events are accepted")
 	}
 
 	// Ignoring timestamp since the tolerance is 5mins
@@ -68,4 +80,52 @@ func CreateTenant(c echo.Context) error {
 	}
 
 	return c.String(http.StatusAccepted, fmt.Sprintf("Committed %s, PR: %d ", hash, pr))
+}
+
+func Reconcile() error {
+	kPath, err := utils.Template(v1.GlobalConfig.Git.KustomizationPath, map[string]any{
+		"cluster": v1.GlobalConfig.GetClusterName(),
+	})
+	if err != nil {
+		return err
+	}
+
+	connector, err := connectors.NewConnector(v1.GlobalConfig.Git)
+	if err != nil {
+		return err
+	}
+
+	fs, _, err := connector.Clone(context.Background(), v1.GlobalConfig.Git.PullRequest.Base, v1.GlobalConfig.Git.PullRequest.Base)
+	if err != nil {
+		return err
+	}
+
+	kust, err := git.GetKustomizaton(fs, kPath)
+	if err != nil {
+		return err
+	}
+
+	orgsInKustomize := lo.Filter(kust.Resources, func(r string, _ int) bool { return strings.HasPrefix(r, "org-") })
+
+	nsList, err := utils.K8sClientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	orgsInCluster := lo.Filter(lo.Map(nsList.Items, func(ns k8sv1.Namespace, _ int) string {
+		return ns.Name
+	}), func(ns string, _ int) bool {
+		return strings.HasPrefix(ns, "org-")
+	})
+
+	orgsToRemove, _ := lo.Difference(orgsInCluster, orgsInKustomize)
+
+	for _, org := range orgsToRemove {
+		if err := utils.K8sClientSet.CoreV1().Namespaces().Delete(context.Background(), org, metav1.DeleteOptions{}); err != nil {
+			logger.Errorf("error deleting namespace[%s]: %v", org, err)
+		}
+		logger.Infof("Deleted %s", org)
+	}
+
+	return nil
 }

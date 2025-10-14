@@ -66,6 +66,16 @@ func serve(configFile string) {
 		}
 	}()
 
+	// Start reconciler
+	go func() {
+		for {
+			if err := tenant.Reconcile(); err != nil {
+				e.Logger.Error(err)
+			}
+			time.Sleep(15 * time.Minute)
+		}
+	}()
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit

@@ -6,18 +6,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-var K8sClientSet *kubernetes.Clientset
-
-func init() {
+func SetupK8sClientSet() (*kubernetes.Clientset, error) {
 	client, err := kommons.NewClientFromDefaults(logger.StandardLogger())
 	if err != nil {
-		// If this errors app should not start
-		panic(err)
+		return nil, err
 	}
 	cc, err := client.GetClientset()
 	if err != nil {
-		// If this errors app should not start
-		panic(err)
+		return nil, err
 	}
-	K8sClientSet = cc
+	return cc, nil
 }

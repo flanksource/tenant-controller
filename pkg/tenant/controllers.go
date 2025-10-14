@@ -19,6 +19,7 @@ import (
 	"github.com/samber/lo"
 	k8sv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 var ClerkTenantWebhook *Webhook
@@ -82,7 +83,7 @@ func CreateTenant(c echo.Context) error {
 	return c.String(http.StatusAccepted, fmt.Sprintf("Committed %s, PR: %d ", hash, pr))
 }
 
-func Reconcile() error {
+func Reconcile(k8sClientSet *kubernetes.Clientset) error {
 	kPath, err := utils.Template(v1.GlobalConfig.Git.KustomizationPath, map[string]any{
 		"cluster": v1.GlobalConfig.GetClusterName(),
 	})
@@ -107,7 +108,7 @@ func Reconcile() error {
 
 	orgsInKustomize := lo.Filter(kust.Resources, func(r string, _ int) bool { return strings.HasPrefix(r, "org-") })
 
-	nsList, err := utils.K8sClientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	nsList, err := k8sClientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -121,7 +122,7 @@ func Reconcile() error {
 	orgsToRemove, _ := lo.Difference(orgsInCluster, orgsInKustomize)
 
 	for _, org := range orgsToRemove {
-		if err := utils.K8sClientSet.CoreV1().Namespaces().Delete(context.Background(), org, metav1.DeleteOptions{}); err != nil {
+		if err := k8sClientSet.CoreV1().Namespaces().Delete(context.Background(), org, metav1.DeleteOptions{}); err != nil {
 			logger.Errorf("error deleting namespace[%s]: %v", org, err)
 		}
 		logger.Infof("Deleted %s", org)

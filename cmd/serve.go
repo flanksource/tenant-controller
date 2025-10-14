@@ -13,6 +13,7 @@ import (
 	"github.com/flanksource/tenant-controller/api/v1"
 	"github.com/flanksource/tenant-controller/pkg/config"
 	"github.com/flanksource/tenant-controller/pkg/tenant"
+	"github.com/flanksource/tenant-controller/pkg/utils"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echopprof "github.com/sevennt/echo-pprof"
@@ -39,6 +40,11 @@ func serve(configFile string) {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
+	k8sClientSet, err := utils.SetupK8sClientSet()
+	if err != nil {
+		log.Fatalf("error setting up k8sClientSet: %v", err)
+	}
+
 	e := echo.New()
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowedCors,
@@ -50,7 +56,6 @@ func serve(configFile string) {
 		echopprof.Wrap(e)
 	}
 
-	var err error
 	tenant.ClerkTenantWebhook, err = tenant.NewWebhook(v1.GlobalConfig.Clerk.WebhookSecret)
 	if err != nil {
 		log.Fatalf("Error setting up webhook: %v", err)
@@ -69,7 +74,7 @@ func serve(configFile string) {
 	// Start reconciler
 	go func() {
 		for {
-			if err := tenant.Reconcile(); err != nil {
+			if err := tenant.Reconcile(k8sClientSet); err != nil {
 				e.Logger.Error(err)
 			}
 			time.Sleep(15 * time.Minute)

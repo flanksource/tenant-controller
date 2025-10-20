@@ -1,6 +1,13 @@
 package v1
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/flanksource/duty/connection"
+	"github.com/flanksource/duty/context"
+	"github.com/flanksource/duty/types"
+	"k8s.io/client-go/kubernetes"
+)
 
 type CloudProvider string
 
@@ -23,6 +30,18 @@ func (cloud CloudProvider) GetClusterName() string {
 		return GlobalConfig.GCP.TenantCluster
 	}
 	return ""
+}
+
+func (cloud CloudProvider) GetKubeconfig() *types.EnvVar {
+	switch cloud {
+	case Azure:
+		return GlobalConfig.Azure.Kubeconfig
+	case AWS:
+		return GlobalConfig.AWS.Kubeconfig
+	case GCP:
+		return GlobalConfig.GCP.Kubeconfig
+	}
+	return nil
 }
 
 func (cloud CloudProvider) GetHost(tenantID string) string {
@@ -49,24 +68,27 @@ type Config struct {
 
 type AWSConfig struct {
 	// ARN of the key to use for encryption
-	Key              string `json:"key" yaml:"key"`
-	TenantCluster    string `json:"tenant_cluster" yaml:"tenant_cluster"`
-	TenantHostFormat string `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
+	Key              string        `json:"key" yaml:"key"`
+	TenantCluster    string        `json:"tenant_cluster" yaml:"tenant_cluster"`
+	TenantHostFormat string        `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
+	Kubeconfig       *types.EnvVar `json:"kubeconfig" yaml:"kubeconfig"`
 }
 
 type AzureConfig struct {
-	TenantID         string `json:"tenant_id" yaml:"tenant_id"`
-	ClientID         string `json:"client_id" yaml:"client_id"`
-	ClientSecret     string `json:"client_secret" yaml:"client_secret"`
-	VaultURI         string `json:"vault_uri" yaml:"vault_url"`
-	TenantCluster    string `json:"tenant_cluster" yaml:"tenant_cluster"`
-	TenantHostFormat string `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
+	TenantID         string        `json:"tenant_id" yaml:"tenant_id"`
+	ClientID         string        `json:"client_id" yaml:"client_id"`
+	ClientSecret     string        `json:"client_secret" yaml:"client_secret"`
+	VaultURI         string        `json:"vault_uri" yaml:"vault_url"`
+	TenantCluster    string        `json:"tenant_cluster" yaml:"tenant_cluster"`
+	TenantHostFormat string        `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
+	Kubeconfig       *types.EnvVar `json:"kubeconfig" yaml:"kubeconfig"`
 }
 
 type GCPConfig struct {
-	KMS              string `json:"kms" yaml:"kms"`
-	TenantCluster    string `json:"tenant_cluster" yaml:"tenant_cluster"`
-	TenantHostFormat string `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
+	KMS              string        `json:"kms" yaml:"kms"`
+	TenantCluster    string        `json:"tenant_cluster" yaml:"tenant_cluster"`
+	TenantHostFormat string        `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
+	Kubeconfig       *types.EnvVar `json:"kubeconfig" yaml:"kubeconfig"`
 }
 
 type ClerkConfig struct {
@@ -81,4 +103,11 @@ func (c Config) GetClusterName() string {
 
 func (c Config) GetHost(tenantID string) string {
 	return c.DefaultCloud.GetHost(tenantID)
+}
+
+func (c Config) Kubernetes(ctx context.Context) (kubernetes.Interface, error) {
+	kc := c.DefaultCloud.GetKubeconfig()
+	conn := connection.KubeconfigConnection{Kubeconfig: kc}
+	k8s, _, err := conn.Populate(ctx)
+	return k8s, err
 }

@@ -83,7 +83,7 @@ func CreateTenant(c echo.Context) error {
 	return c.String(http.StatusAccepted, fmt.Sprintf("Committed %s, PR: %d ", hash, pr))
 }
 
-func Reconcile(k8sClientSet *kubernetes.Clientset) error {
+func Reconcile(k8s kubernetes.Interface) error {
 	kPath, err := utils.Template(v1.GlobalConfig.Git.KustomizationPath, map[string]any{
 		"cluster": v1.GlobalConfig.GetClusterName(),
 	})
@@ -105,10 +105,9 @@ func Reconcile(k8sClientSet *kubernetes.Clientset) error {
 	if err != nil {
 		return err
 	}
-
 	orgsInKustomize := lo.Filter(kust.Resources, func(r string, _ int) bool { return strings.HasPrefix(r, "org-") })
 
-	nsList, err := k8sClientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	nsList, err := k8s.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
@@ -122,7 +121,7 @@ func Reconcile(k8sClientSet *kubernetes.Clientset) error {
 	orgsToRemove, _ := lo.Difference(orgsInCluster, orgsInKustomize)
 
 	for _, org := range orgsToRemove {
-		if err := k8sClientSet.CoreV1().Namespaces().Delete(context.Background(), org, metav1.DeleteOptions{}); err != nil {
+		if err := k8s.CoreV1().Namespaces().Delete(context.Background(), org, metav1.DeleteOptions{}); err != nil {
 			logger.Errorf("error deleting namespace[%s]: %v", org, err)
 		}
 		logger.Infof("Deleted %s", org)

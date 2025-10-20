@@ -70,6 +70,9 @@ func serve(configFile string) {
 	// Start reconciler
 	dctx := dutyctx.New()
 	k8s, err := v1.GlobalConfig.Kubernetes(dctx)
+	if err != nil {
+		log.Fatalf("Error setting up kubernetes: %v", err)
+	}
 	go func() {
 		for {
 			if err := tenant.Reconcile(k8s); err != nil {

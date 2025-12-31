@@ -44,6 +44,18 @@ func (cloud CloudProvider) GetKubeconfig() *types.EnvVar {
 	return nil
 }
 
+func (cloud CloudProvider) GetServiceCIDR() string {
+	switch cloud {
+	case Azure:
+		return GlobalConfig.Azure.ServiceCIDR
+	case AWS:
+		return GlobalConfig.AWS.ServiceCIDR
+	case GCP:
+		return GlobalConfig.GCP.ServiceCIDR
+	}
+	return ""
+}
+
 func (cloud CloudProvider) GetHost(tenantID string) string {
 	switch cloud {
 	case Azure:
@@ -72,6 +84,7 @@ type AWSConfig struct {
 	TenantCluster    string        `json:"tenant_cluster" yaml:"tenant_cluster"`
 	TenantHostFormat string        `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
 	Kubeconfig       *types.EnvVar `json:"kubeconfig" yaml:"kubeconfig"`
+	ServiceCIDR      string        `json:"serviceCIDR,omitempty" yaml:"serviceCIDR,omitempty"`
 }
 
 type AzureConfig struct {
@@ -82,6 +95,7 @@ type AzureConfig struct {
 	TenantCluster    string        `json:"tenant_cluster" yaml:"tenant_cluster"`
 	TenantHostFormat string        `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
 	Kubeconfig       *types.EnvVar `json:"kubeconfig" yaml:"kubeconfig"`
+	ServiceCIDR      string        `json:"serviceCIDR,omitempty" yaml:"serviceCIDR,omitempty"`
 }
 
 type GCPConfig struct {
@@ -89,6 +103,7 @@ type GCPConfig struct {
 	TenantCluster    string        `json:"tenant_cluster" yaml:"tenant_cluster"`
 	TenantHostFormat string        `json:"tenant_host_fmt" yaml:"tenant_host_fmt"`
 	Kubeconfig       *types.EnvVar `json:"kubeconfig" yaml:"kubeconfig"`
+	ServiceCIDR      string        `json:"serviceCIDR,omitempty" yaml:"serviceCIDR,omitempty"`
 }
 
 type ClerkConfig struct {

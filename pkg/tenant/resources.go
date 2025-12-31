@@ -34,6 +34,9 @@ spec:
     tenantSlug: {{.slug}}
     cloud: {{.cloud}}
     vcluster:
+{{- if .serviceCIDR}}
+      serviceCIDR: {{.serviceCIDR}}
+{{- end}}
       syncer:
         extraArgs:
           - --tls-san={{.id}}.{{.id}}.svc
@@ -64,12 +67,13 @@ resources:
 
 func GetTenantResources(tenant v1.Tenant, sealedSecret string) (obj []*unstructured.Unstructured, err error) {
 	vars := map[string]any{
-		"slug":    tenant.Slug,
-		"host":    tenant.Host,
-		"jwksURL": v1.GlobalConfig.Clerk.JWKSURL,
-		"id":      tenant.ID,
-		"orgID":   tenant.OrgID,
-		"cloud":   tenant.Cloud,
+		"slug":        tenant.Slug,
+		"host":        tenant.Host,
+		"jwksURL":     v1.GlobalConfig.Clerk.JWKSURL,
+		"id":          tenant.ID,
+		"orgID":       tenant.OrgID,
+		"cloud":       tenant.Cloud,
+		"serviceCIDR": tenant.Cloud.GetServiceCIDR(),
 	}
 	helmReleaseRaw, err := utils.Template(HELM_RELEASE_TEMPLATE, vars)
 	if err != nil {

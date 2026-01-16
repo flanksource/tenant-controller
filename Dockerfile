@@ -1,4 +1,4 @@
-FROM golang:1.23 AS builder
+FROM golang:1.25-bookworm@sha256:c423747fbd96fd8f0b1102d947f51f9b266060217478e5f9bf86f145969562ee AS builder
 WORKDIR /app
 
 COPY go.mod /app/go.mod

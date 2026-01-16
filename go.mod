@@ -1,6 +1,6 @@
 module github.com/flanksource/tenant-controller
 
-go 1.24.0
+go 1.25.1
 
 require (
 	github.com/clerkinc/clerk-sdk-go v1.48.1
